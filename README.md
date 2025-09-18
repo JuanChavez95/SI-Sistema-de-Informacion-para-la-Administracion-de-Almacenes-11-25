@@ -29,7 +29,7 @@ En esta sección se definen los aspectos fundamentales para la toma de requerimi
 - ⚙️ **Requerimientos No Funcionales**  
 - 💰 **Análisis de Costos**
 
-📄 **Documentación Completa**: [`Docs/AnalisisRequerimientos.pdf`](./Docs/AnalisisRequerimientos.pdf)
+📄 **Documentación Completa**: [`docs/AnálisisRequerimientos.pdf`](./docs/AnálisisRequerimientos.pdf)
 
 ---
 
@@ -42,7 +42,7 @@ El proyecto sigue un **enfoque incremental por fases**, donde cada fase represen
 | Recurso | Enlace |
 |---------|--------|
 | 📋 **Tablero Trello** | [Ver Proyecto](https://trello.com/invite/b/68bf7bb6936eb730fbc6cbbb/ATTI1d1829d8ff29254a68330b9a32e827e2335571D5/sistema-de-informacion-para-la-administracion-de-almacenes) |
-| 📄 **Documento de Planificación** | [`Docs/Planificacion.pdf`](./Docs/Planificacion.pdf) |
+| 📄 **Documento de Planificación** | [`docs/Planificacion.pdf`](./docs/Planificacion.pdf) |
 | 🏗️ **Organigrama del Proyecto** | [`diagrams/Organigrama.jpg`](./diagrams/Organigrama.jpg) |
 
 ---
