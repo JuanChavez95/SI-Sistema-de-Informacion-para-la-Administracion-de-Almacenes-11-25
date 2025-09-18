@@ -71,9 +71,9 @@ Este diagrama relacional muestra la **implementación física de la base de dato
 
 ```bash
 # Agregar las tecnologías que utilizarán
-- Frontend: [Especificar framework/tecnología]
-- Backend: [Especificar framework/tecnología]  
-- Base de Datos: [Especificar SGBD]
+- Frontend: HTML5 y CSS
+- Backend: Python
+- Base de Datos: MySQL
 - Metodología: SCRUM
 ```
 
