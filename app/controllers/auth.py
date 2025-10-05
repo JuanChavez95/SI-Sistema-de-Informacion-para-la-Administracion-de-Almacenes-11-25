@@ -72,6 +72,7 @@ def login():
 @bp.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
+        # Datos básicos de persona
         nombre = request.form['nombre']
         apellido_paterno = request.form['apellido_paterno']
         apellido_materno = request.form.get('apellido_materno', '')
@@ -80,7 +81,25 @@ def registro():
         password = request.form['password']
         fecha_nacimiento = request.form.get('fecha_nacimiento')
         
-        # ✅ USAR CONEXIÓN DIRECTA
+        # Tipo de registro: empleado o cliente
+        tipo_registro = request.form.get('tipo_registro')  # 'empleado' o 'cliente'
+        
+        # Validación de contraseña de administrador
+        if tipo_registro == 'empleado':
+            id_rol = request.form.get('id_rol')
+            if id_rol == '1004':  # ID del rol Administrador
+                password_admin = request.form.get('password_admin')
+                if password_admin != 'JEFE123':
+                    flash('Contraseña de administrador incorrecta', 'danger')
+                    return redirect(url_for('auth.registro'))
+        
+        # Datos de cliente (si aplica)
+        if tipo_registro == 'cliente':
+            tipo_cliente = request.form.get('tipo_cliente')
+            categoria_cliente = request.form.get('categoria_cliente')
+            limite_credito = request.form.get('limite_credito', 0)
+            empresa = request.form.get('empresa', '')
+        
         conn = get_db_connection()
         if not conn:
             return render_template('auth/registro.html')
@@ -88,7 +107,7 @@ def registro():
         cursor = conn.cursor(dictionary=True)
         
         try:
-            # Validar que no exista el email o CI
+            # Validar email y CI únicos
             cursor.execute("SELECT * FROM Persona WHERE email = %s OR ci = %s", (email, ci))
             if cursor.fetchone():
                 flash('El email o CI ya están registrados', 'danger')
@@ -96,19 +115,30 @@ def registro():
                 conn.close()
                 return redirect(url_for('auth.registro'))
             
-            # Hash de la contraseña
+            # Hash de contraseña
             hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             
-            # Obtener próximo ID
-            cursor.execute("SELECT COALESCE(MAX(id_persona), 0) as max_id FROM Persona")
-            max_id = cursor.fetchone()['max_id']
-            next_id = max_id + 1
-            
-            # Insertar persona
+            # Insertar en Persona
             cursor.execute("""
-                INSERT INTO Persona (id_persona, nombre, apellido_paterno, apellido_materno, ci, email, contra, fecha_nacimiento)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (next_id, nombre, apellido_paterno, apellido_materno, ci, email, hashed.decode('utf-8'), fecha_nacimiento))
+                INSERT INTO Persona (nombre, apellido_paterno, apellido_materno, ci, email, contra, fecha_nacimiento)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (nombre, apellido_paterno, apellido_materno, ci, email, hashed.decode('utf-8'), fecha_nacimiento))
+            
+            id_persona = cursor.lastrowid
+            
+            if tipo_registro == 'empleado':
+                # Asignar rol en Persona_Rol
+                cursor.execute("""
+                    INSERT INTO Persona_Rol (id_rol, id_persona)
+                    VALUES (%s, %s)
+                """, (id_rol, id_persona))
+            
+            elif tipo_registro == 'cliente':
+                # Crear registro en Cliente
+                cursor.execute("""
+                    INSERT INTO Cliente (id_cliente, fecha_ingreso, tipo_cliente, categoria_cliente, limite_credito, empresa)
+                    VALUES (%s, CURDATE(), %s, %s, %s, %s)
+                """, (id_persona, tipo_cliente, categoria_cliente, limite_credito, empresa))
             
             conn.commit()
             flash('Registro exitoso. Ya puedes iniciar sesión', 'success')
@@ -123,7 +153,17 @@ def registro():
         
         return redirect(url_for('auth.login'))
     
-    return render_template('auth/registro.html')
+    # GET: Obtener roles para el formulario
+    conn = get_db_connection()
+    roles = []
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id_rol, nombre_rol FROM Rol")
+        roles = cursor.fetchall()
+        cursor.close()
+        conn.close()
+    
+    return render_template('auth/registro.html', roles=roles)
 
 @bp.route('/logout')
 def logout():

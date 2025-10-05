@@ -688,3 +688,20 @@ input:focus-visible {
         margin-left: 0 !important;
     }
 }
+
+select {
+    padding: 12px 16px;
+    border: 2px solid var(--gris-claro);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s;
+    background: white;
+    width: 100%;
+    font-family: inherit;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--morado);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}

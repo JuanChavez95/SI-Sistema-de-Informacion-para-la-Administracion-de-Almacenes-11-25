@@ -11,7 +11,18 @@
             <p>Registro de nuevo usuario</p>
         </div>
         
-        <form method="POST" class="auth-form">
+        <form method="POST" class="auth-form" id="registroForm">
+            <!-- Selector de tipo de registro -->
+            <div class="form-group">
+                <label>Tipo de Registro</label>
+                <select name="tipo_registro" id="tipo_registro" required onchange="toggleRegistroTipo()">
+                    <option value="">Seleccione...</option>
+                    <option value="empleado">Empleado</option>
+                    <option value="cliente">Cliente</option>
+                </select>
+            </div>
+            
+            <!-- DATOS PERSONALES (COMÚN) -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="nombre">Nombre</label>
@@ -51,6 +62,64 @@
                 <input type="password" id="password" name="password" required placeholder="••••••••">
             </div>
             
+            <!-- SECCIÓN EMPLEADO -->
+            <div id="seccionEmpleado" style="display: none;">
+                <div class="form-group">
+                    <label for="id_rol">Rol</label>
+                    <select name="id_rol" id="id_rol" onchange="togglePasswordAdmin()">
+                        <option value="">Seleccione un rol...</option>
+                        {% for rol in roles %}
+                        <option value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group" id="passwordAdminGroup" style="display: none;">
+                    <label for="password_admin">Contraseña de Administrador</label>
+                    <input type="password" id="password_admin" name="password_admin" placeholder="Contraseña especial">
+                    <small style="color: #6b7280; font-size: 12px;">Requerida solo para rol Administrador</small>
+                </div>
+            </div>
+            
+            <!-- SECCIÓN CLIENTE -->
+            <div id="seccionCliente" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipo_cliente">Tipo de Cliente</label>
+                        <select name="tipo_cliente" id="tipo_cliente">
+                            <option value="">Seleccione...</option>
+                            <option value="Minorista">Minorista</option>
+                            <option value="Mayorista">Mayorista</option>
+                            <option value="Empresa">Empresa</option>
+                            <option value="Distribuidor">Distribuidor</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categoria_cliente">Categoría</label>
+                        <select name="categoria_cliente" id="categoria_cliente">
+                            <option value="">Seleccione...</option>
+                            <option value="Básico">Básico</option>
+                            <option value="Preferente">Preferente</option>
+                            <option value="Corporativo">Corporativo</option>
+                            <option value="Élite">Élite</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="limite_credito">Límite de Crédito</label>
+                        <input type="number" id="limite_credito" name="limite_credito" step="0.01" value="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="empresa">Empresa</label>
+                        <input type="text" id="empresa" name="empresa">
+                    </div>
+                </div>
+            </div>
+            
             <button type="submit" class="btn btn-primary">Registrarse</button>
         </form>
         
@@ -59,4 +128,39 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleRegistroTipo() {
+    const tipo = document.getElementById('tipo_registro').value;
+    const seccionEmpleado = document.getElementById('seccionEmpleado');
+    const seccionCliente = document.getElementById('seccionCliente');
+    
+    if (tipo === 'empleado') {
+        seccionEmpleado.style.display = 'block';
+        seccionCliente.style.display = 'none';
+        document.getElementById('id_rol').required = true;
+    } else if (tipo === 'cliente') {
+        seccionEmpleado.style.display = 'none';
+        seccionCliente.style.display = 'block';
+        document.getElementById('id_rol').required = false;
+    } else {
+        seccionEmpleado.style.display = 'none';
+        seccionCliente.style.display = 'none';
+    }
+}
+
+function togglePasswordAdmin() {
+    const rolSelect = document.getElementById('id_rol');
+    const passwordAdminGroup = document.getElementById('passwordAdminGroup');
+    
+    // Asumiendo que 1004 es el ID del rol Administrador
+    if (rolSelect.value === '1004') {
+        passwordAdminGroup.style.display = 'block';
+        document.getElementById('password_admin').required = true;
+    } else {
+        passwordAdminGroup.style.display = 'none';
+        document.getElementById('password_admin').required = false;
+    }
+}
+</script>
 {% endblock %}
