@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, redirect, url_for
 from app.utils.decorators import login_required
+from functools import wraps
 
+bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 bp = Blueprint('dashboard', __name__)
 
 @bp.route('/dashboard')
@@ -30,9 +32,9 @@ def index():
         },
         {
             'nombre': 'Almacenes',
+            'descripcion': 'Gestión de almacenes y estantes',
+            'url': url_for('almacen.index'),
             'icono': '🏪',
-            'descripcion': 'Gestión de almacenes',
-            'url': '#',
             'color': 'negro'
         },
         {

@@ -6,9 +6,13 @@
 <div class="auth-container">
     <div class="auth-card registro-card">
         <div class="auth-header">
-            <div class="logo">📦</div>
-            <h1>Crear Cuenta</h1>
-            <p>Registro de nuevo usuario</p>
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 180px; height: 90px; object-fit: contain; margin-bottom: 20px;">
+            </div>
+            <h1>CREAR CUENTA</h1>
+            <h3>Registro de nuevo usuario</h3>
         </div>
         
         <form method="POST" class="auth-form" id="registroForm">
@@ -16,7 +20,7 @@
             <div class="form-group">
                 <label>Tipo de Registro</label>
                 <select name="tipo_registro" id="tipo_registro" required onchange="toggleRegistroTipo()">
-                    <option value="">Seleccione...</option>
+                    <option value="">Seleccionar Usuario</option>
                     <option value="empleado">Empleado</option>
                     <option value="cliente">Cliente</option>
                 </select>
@@ -87,7 +91,7 @@
                     <div class="form-group">
                         <label for="tipo_cliente">Tipo de Cliente</label>
                         <select name="tipo_cliente" id="tipo_cliente">
-                            <option value="">Seleccione...</option>
+                            <option value="">Seleccione Tipo</option>
                             <option value="Minorista">Minorista</option>
                             <option value="Mayorista">Mayorista</option>
                             <option value="Empresa">Empresa</option>
@@ -98,7 +102,7 @@
                     <div class="form-group">
                         <label for="categoria_cliente">Categoría</label>
                         <select name="categoria_cliente" id="categoria_cliente">
-                            <option value="">Seleccione...</option>
+                            <option value="">Seleccionar Categoría</option>
                             <option value="Básico">Básico</option>
                             <option value="Preferente">Preferente</option>
                             <option value="Corporativo">Corporativo</option>

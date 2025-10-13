@@ -1,0 +1,527 @@
+/* ========================================
+   ESTILOS DEL MÓDULO DE ALMACENES
+   ======================================== */
+
+/* SECCIONES */
+.almacenes-section,
+.form-section,
+.detalle-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--gris-claro);
+}
+
+.section-header h2,
+.section-header h3 {
+    margin: 0;
+    color: var(--negro);
+}
+
+.btn-nuevo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+/* GRID DE ALMACENES */
+.almacenes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.almacen-card {
+    background: white;
+    border: 2px solid var(--gris-claro);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.almacen-card:hover {
+    border-color: var(--morado);
+    box-shadow: 0 8px 16px rgba(124, 58, 237, 0.15);
+    transform: translateY(-4px);
+}
+
+.card-header {
+    padding: 16px;
+    background: linear-gradient(135deg, var(--morado-light) 0%, var(--morado) 100%);
+    color: white;
+}
+
+.card-header h3 {
+    margin: 0 0 6px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.ubicacion {
+    font-size: 13px;
+    opacity: 0.9;
+    display: block;
+}
+
+.card-body {
+    padding: 16px;
+    flex: 1;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.info-item .label {
+    font-weight: 600;
+    color: var(--gris-oscuro);
+}
+
+.info-item .value {
+    color: var(--negro);
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--gris-claro);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 12px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    transition: width 0.3s ease;
+}
+
+.card-footer {
+    padding: 12px 16px;
+    background: var(--gris);
+    border-top: 1px solid var(--gris-claro);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 80px;
+}
+
+.btn-info {
+    background: var(--morado);
+    color: white;
+}
+
+.btn-info:hover {
+    background: var(--morado-dark);
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-secondary {
+    background: var(--gris-oscuro);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background: var(--negro);
+    transform: translateY(-2px);
+}
+
+/* FORMULARIOS */
+.almacen-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--negro);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 12px 16px;
+    border: 2px solid var(--gris-claro);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.3s;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--morado);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.form-subtitle {
+    color: var(--gris-oscuro);
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.form-actions .btn {
+    flex: 1;
+}
+
+/* DETALLE DEL ALMACÉN */
+.detalle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--gris-claro);
+}
+
+.detalle-info h2 {
+    margin: 0 0 6px 0;
+    font-size: 28px;
+    color: var(--negro);
+}
+
+.detalle-info .ubicacion {
+    color: var(--gris-oscuro);
+    font-size: 14px;
+    display: block;
+}
+
+.detalle-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.detalle-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: var(--gris);
+    border-radius: 8px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--gris-oscuro);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--morado);
+}
+
+.info-box {
+    background: var(--gris);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    border-left: 4px solid var(--morado);
+}
+
+.info-box p {
+    margin: 0;
+    color: var(--negro);
+}
+
+/* ESTANTES */
+.estantes-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid var(--gris-claro);
+}
+
+.estantes-table {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+table thead {
+    background: var(--gris);
+}
+
+table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--negro);
+    border-bottom: 2px solid var(--gris-claro);
+}
+
+table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--gris-claro);
+    color: var(--negro);
+}
+
+table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.02);
+}
+
+table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.badge-disponible {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-mantenimiento {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-lleno {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-inutilizable {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.mini-progress {
+    height: 6px;
+    background: var(--gris-claro);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mini-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--morado), var(--morado-light));
+    transition: width 0.3s ease;
+}
+
+/* ESTADO VACÍO */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--gris);
+    border-radius: 8px;
+}
+
+.empty-state p {
+    color: var(--gris-oscuro);
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .almacenes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .detalle-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .detalle-info h2 {
+        font-size: 22px;
+    }
+
+    .detalle-actions {
+        width: 100%;
+    }
+
+    .detalle-actions .btn {
+        flex: 1;
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .detalle-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-value {
+        font-size: 22px;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .btn-nuevo {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .card-footer {
+        flex-direction: column;
+    }
+
+    .btn-sm {
+        width: 100%;
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    table th,
+    table td {
+        padding: 8px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .estantes-table {
+        border-radius: 8px;
+        border: 1px solid var(--gris-claro);
+    }
+}
+
+@media (max-width: 480px) {
+    .almacenes-section,
+    .form-section,
+    .detalle-section {
+        padding: 16px;
+    }
+
+    .detalle-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .info-item {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    table {
+        font-size: 11px;
+    }
+}
+
+/* ANIMACIONES */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.almacen-card {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ESTADOS DE BOTONES */
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

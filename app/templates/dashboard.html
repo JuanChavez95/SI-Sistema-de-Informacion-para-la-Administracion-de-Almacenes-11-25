@@ -1,14 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - Sistema de Almacenes{% endblock %}
+{% block title %}Dashboard - Grupo Forno{% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <div class="logo">📦</div>
-            <h2>Sistema Almacenes</h2>
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 150px; height: 75px; object-fit: contain;">
+            </div>
+            <h2>Grupo Forno</h2>
         </div>
         
         <div class="user-info">
@@ -32,7 +36,7 @@
             </a>
         </div>
     </aside>
-    
+
     <!-- Main Content -->
     <main class="main-content">
         <header class="content-header">

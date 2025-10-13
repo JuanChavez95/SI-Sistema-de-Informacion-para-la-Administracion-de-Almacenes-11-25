@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Almacenes - Grupo Forno{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-almacen.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 150px; height: 75px; object-fit: contain;">
+            </div>
+            <h2>Grupo Forno</h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">{{ session.user_name[0] }}</div>
+            <div class="user-details">
+                <p class="user-name">{{ session.user_name }}</p>
+                <p class="user-role">{{ session.user_role }}</p>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('almacen.index') }}" class="nav-item active">
+                <span class="nav-icon">🏪</span>
+                <span>Almacenes</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-logout">
+                <span>🚪</span> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="content-header">
+            <h1>Gestión de Almacenes</h1>
+            <p>Administra los almacenes y estantes del complejo</p>
+        </header>
+
+        <!-- TAB: LISTA DE ALMACENES -->
+        {% if tab == 'lista' %}
+        <section class="almacenes-section">
+            <div class="section-header">
+                <h2>Almacenes Registrados</h2>
+                <a href="{{ url_for('almacen.crear') }}" class="btn btn-primary btn-nuevo">
+                    <span>➕</span> Nuevo Almacén
+                </a>
+            </div>
+
+            {% if almacenes %}
+            <div class="almacenes-grid">
+                {% for almacen in almacenes %}
+                <div class="almacen-card">
+                    <div class="card-header">
+                        <h3>{{ almacen.nombre_almacen }}</h3>
+                        <span class="ubicacion">📍 {{ almacen.ubicacion or 'Sin ubicación' }}</span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="info-item">
+                            <span class="label">Capacidad:</span>
+                            <span class="value">{{ almacen.capacidad }} unidades</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Ocupado:</span>
+                            <span class="value">{{ almacen.capacidad_ocupada }} / {{ almacen.capacidad }}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ (almacen.capacidad_ocupada / almacen.capacidad * 100) if almacen.capacidad > 0 else 0 }}%"></div>
+                        </div>
+                        {% if almacen.nombre %}
+                        <div class="info-item">
+                            <span class="label">Responsable:</span>
+                            <span class="value">{{ almacen.nombre }} {{ almacen.apellido_paterno }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer">
+                        <a href="{{ url_for('almacen.ver_detalle', id_almacen=almacen.id_almacen) }}" class="btn btn-info btn-sm">
+                            📋 Ver Detalles
+                        </a>
+                        <a href="{{ url_for('almacen.editar', id_almacen=almacen.id_almacen) }}" class="btn btn-warning btn-sm">
+                            ✏️ Editar
+                        </a>
+                        <form method="POST" action="{{ url_for('almacen.eliminar', id_almacen=almacen.id_almacen) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar este almacén?')">
+                                🗑️ Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No hay almacenes registrados</p>
+                <a href="{{ url_for('almacen.crear') }}" class="btn btn-primary">Crear Almacén</a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- TAB: CREAR ALMACÉN -->
+        {% elif tab == 'crear' %}
+        <section class="form-section">
+            <h2>Crear Nuevo Almacén</h2>
+            <form method="POST" class="almacen-form">
+                <div class="form-group">
+                    <label for="nombre_almacen">Nombre del Almacén *</label>
+                    <input type="text" id="nombre_almacen" name="nombre_almacen" required placeholder="Ej: Almacén Principal, Sección A, etc.">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="capacidad">Capacidad (unidades) *</label>
+                        <input type="number" id="capacidad" name="capacidad" required min="1"
+                               placeholder="Ej: 1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="ubicacion">Ubicación</label>
+                        <input type="text" id="ubicacion" name="ubicacion" 
+                               placeholder="Ej: Pasillo Principal, Zona Norte">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_persona">Responsable (Opcional)</label>
+                    <select id="id_persona" name="id_persona">
+                        <option value="">-- Seleccionar Responsable --</option>
+                        {% for persona in personas %}
+                        <option value="{{ persona.id_persona }}">
+                            {{ persona.nombre }} {{ persona.apellido_paterno }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Guardar Almacén</button>
+                    <a href="{{ url_for('almacen.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: EDITAR ALMACÉN -->
+        {% elif tab == 'editar' %}
+        <section class="form-section">
+            <h2>Editar Almacén</h2>
+            <form method="POST" class="almacen-form">
+                <div class="form-group">
+                    <label for="nombre_almacen">Nombre del Almacén *</label>
+                    <input type="text" id="nombre_almacen" name="nombre_almacen" required 
+                           value="{{ almacen.nombre_almacen }}">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="capacidad">Capacidad (unidades) *</label>
+                        <input type="number" id="capacidad" name="capacidad" required min="1"
+                               value="{{ almacen.capacidad }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="ubicacion">Ubicación</label>
+                        <input type="text" id="ubicacion" name="ubicacion" 
+                               value="{{ almacen.ubicacion or '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_persona">Responsable (Opcional)</label>
+                    <select id="id_persona" name="id_persona">
+                        <option value="">-- Seleccionar Responsable --</option>
+                        {% for persona in personas %}
+                        <option value="{{ persona.id_persona }}" 
+                                {% if almacen.id_persona == persona.id_persona %}selected{% endif %}>
+                            {{ persona.nombre }} {{ persona.apellido_paterno }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Actualizar</button>
+                    <a href="{{ url_for('almacen.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: DETALLE DEL ALMACÉN -->
+        {% elif tab == 'detalle' %}
+        <section class="detalle-section">
+            <div class="detalle-header">
+                <div class="detalle-info">
+                    <h2>{{ almacen.nombre_almacen }}</h2>
+                    <p class="ubicacion">📍 {{ almacen.ubicacion or 'Sin ubicación especificada' }}</p>
+                </div>
+                <div class="detalle-actions">
+                    <a href="{{ url_for('almacen.editar', id_almacen=almacen.id_almacen) }}" class="btn btn-warning">
+                        ✏️ Editar
+                    </a>
+                    <a href="{{ url_for('almacen.index') }}" class="btn btn-secondary">
+                        ← Volver
+                    </a>
+                </div>
+            </div>
+
+            <div class="detalle-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Capacidad Total</span>
+                    <span class="stat-value">{{ almacen.capacidad }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Capacidad Ocupada</span>
+                    <span class="stat-value">{{ almacen.capacidad_ocupada }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Disponible</span>
+                    <span class="stat-value">{{ almacen.capacidad - almacen.capacidad_ocupada }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">% Ocupación</span>
+                    <span class="stat-value">{{ ((almacen.capacidad_ocupada / almacen.capacidad * 100) | int) if almacen.capacidad > 0 else 0 }}%</span>
+                </div>
+            </div>
+
+            {% if almacen.nombre %}
+            <div class="info-box">
+                <p><strong>Responsable:</strong> {{ almacen.nombre }} {{ almacen.apellido_paterno }}</p>
+            </div>
+            {% endif %}
+
+            <!-- ESTANTES -->
+            <div class="estantes-section">
+                <div class="section-header">
+                    <h3>Estantes del Almacén</h3>
+                    <a href="{{ url_for('almacen.crear_estante', id_almacen=almacen.id_almacen) }}" 
+                       class="btn btn-primary btn-sm">
+                        ➕ Nuevo Estante
+                    </a>
+                </div>
+
+                {% if estantes %}
+                <div class="estantes-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pasillo</th>
+                                <th>Capacidad</th>
+                                <th>Ocupado</th>
+                                <th>Estado</th>
+                                <th>% Ocupación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for estante in estantes %}
+                            <tr>
+                                <td><strong>#{{ estante.id_estante }}</strong></td>
+                                <td>{{ estante.pasillo }}</td>
+                                <td>{{ estante.capacidad }}</td>
+                                <td>{{ estante.capacidad_ocupada }}</td>
+                                <td>
+                                    <span class="badge badge-{{ estante.estado.lower() }}">
+                                        {{ estante.estado }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="mini-progress">
+                                        <div class="mini-fill" style="width: {{ (estante.capacidad_ocupada / estante.capacidad * 100) if estante.capacidad > 0 else 0 }}%"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('almacen.editar_estante', id_estante=estante.id_estante) }}" 
+                                       class="btn btn-sm btn-info">✏️</a>
+                                    <form method="POST" action="{{ url_for('almacen.eliminar_estante', id_estante=estante.id_estante) }}" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('¿Eliminar este estante?')">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>No hay estantes en este almacén</p>
+                    <a href="{{ url_for('almacen.crear_estante', id_almacen=almacen.id_almacen) }}" 
+                       class="btn btn-primary">
+                        Crear Primer Estante
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- TAB: CREAR ESTANTE -->
+        {% elif tab == 'crear_estante' %}
+        <section class="form-section">
+            <h2>Crear Nuevo Estante</h2>
+            <p class="form-subtitle">Almacén: <strong>{{ almacen.nombre_almacen }}</strong></p>
+            
+            <form method="POST" class="almacen-form">
+                <div class="form-group">
+                    <label for="pasillo">Pasillo / Referencia *</label>
+                    <input type="text" id="pasillo" name="pasillo" required 
+                           placeholder="Ej: A1, B2, Pasillo 01">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="capacidad">Capacidad (unidades) *</label>
+                        <input type="number" id="capacidad" name="capacidad" required min="1"
+                               placeholder="Ej: 500">
+                    </div>
+                    <div class="form-group">
+                        <label for="estado">Estado *</label>
+                        <select id="estado" name="estado" required>
+                            <option value="Disponible">Disponible</option>
+                            <option value="Mantenimiento">Mantenimiento</option>
+                            <option value="Lleno">Lleno</option>
+                            <option value="Inutilizable">Inutilizable</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Crear Estante</button>
+                    <a href="{{ url_for('almacen.ver_detalle', id_almacen=almacen.id_almacen) }}" 
+                       class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: EDITAR ESTANTE -->
+        {% elif tab == 'editar_estante' %}
+        <section class="form-section">
+            <h2>Editar Estante</h2>
+            
+            <form method="POST" class="almacen-form">
+                <div class="form-group">
+                    <label for="pasillo">Pasillo / Referencia *</label>
+                    <input type="text" id="pasillo" name="pasillo" required 
+                           value="{{ estante.pasillo }}">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="capacidad">Capacidad (unidades) *</label>
+                        <input type="number" id="capacidad" name="capacidad" required min="1"
+                               value="{{ estante.capacidad }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="estado">Estado *</label>
+                        <select id="estado" name="estado" required>
+                            <option value="Disponible" {% if estante.estado == 'Disponible' %}selected{% endif %}>Disponible</option>
+                            <option value="Mantenimiento" {% if estante.estado == 'Mantenimiento' %}selected{% endif %}>Mantenimiento</option>
+                            <option value="Lleno" {% if estante.estado == 'Lleno' %}selected{% endif %}>Lleno</option>
+                            <option value="Inutilizable" {% if estante.estado == 'Inutilizable' %}selected{% endif %}>Inutilizable</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Actualizar Estante</button>
+                    <a href="{{ url_for('almacen.ver_detalle', id_almacen=estante.id_almacen) }}" 
+                       class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

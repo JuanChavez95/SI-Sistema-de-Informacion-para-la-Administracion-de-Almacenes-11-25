@@ -5,10 +5,15 @@
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
+        
         <div class="auth-header">
-            <div class="logo">📦</div>
-            <h1>Sistema de Almacenes</h1>
-            <p>Iniciar Sesión</p>
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 180px; height: 90px; object-fit: contain; margin-bottom: 20px;">
+            </div>
+            <h1>GRUPO FORNO</h1>
+            <h3>Iniciar Sesión</h3>
         </div>
         
         <form method="POST" class="auth-form">

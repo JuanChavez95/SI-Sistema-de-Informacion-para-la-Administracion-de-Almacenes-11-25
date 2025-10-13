@@ -120,8 +120,15 @@ body {
 }
 
 .logo {
-    font-size: 48px;
     margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo img {
+    max-width: 100%;
+    height: auto;
 }
 
 .auth-header h1 {
@@ -175,8 +182,9 @@ body {
     box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
+/* POR ESTO: */
 .form-group input:invalid {
-    border-color: #ef4444;
+    border-color: var(--morado);
 }
 
 .btn {
