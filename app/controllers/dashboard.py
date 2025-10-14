@@ -11,9 +11,9 @@ def index():
     modulos = [
         {
             'nombre': 'Usuarios',
+            'descripcion': 'Gestión de empleados y clientes',
+            'url': url_for('usuarios.index'),
             'icono': '👥',
-            'descripcion': 'Gestión de usuarios y roles',
-            'url': '#',
             'color': 'morado'
         },
         {

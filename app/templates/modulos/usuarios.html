@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Usuarios - Grupo Forno{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-usuarios.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 150px; height: 75px; object-fit: contain;">
+            </div>
+            <h2>Grupo Forno</h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">{{ session.user_name[0] }}</div>
+            <div class="user-details">
+                <p class="user-name">{{ session.user_name }}</p>
+                <p class="user-role">{{ session.user_role }}</p>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('usuarios.index') }}" class="nav-item active">
+                <span class="nav-icon">👥</span>
+                <span>Usuarios</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-logout">
+                <span>🚪</span> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="content-header">
+            <h1>Gestión de Usuarios</h1>
+            <p>Administra empleados y clientes del sistema</p>
+        </header>
+
+        <!-- TAB: LISTA DE USUARIOS -->
+        {% if tab == 'lista' %}
+        <section class="usuarios-section">
+            <div class="tabs-header">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="mostrarTab('empleados')">👨‍💼 Empleados</button>
+                    <button class="tab-btn" onclick="mostrarTab('clientes')">🛍️ Clientes</button>
+                </div>
+                <a href="{{ url_for('usuarios.crear') }}" class="btn btn-primary btn-nuevo">
+                    <span>➕</span> Nuevo Usuario
+                </a>
+            </div>
+
+            <!-- EMPLEADOS -->
+            <div id="empleados" class="tab-content active">
+                <h2>Empleados Registrados</h2>
+                {% if empleados %}
+                <div class="usuarios-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>CI</th>
+                                <th>Rol</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for empleado in empleados %}
+                            <tr>
+                                <td><strong>#{{ empleado.id_persona }}</strong></td>
+                                <td>{{ empleado.nombre }} {{ empleado.apellido_paterno }}</td>
+                                <td>{{ empleado.email }}</td>
+                                <td>{{ empleado.ci }}</td>
+                                <td>
+                                    {% if empleado.roles %}
+                                        <span class="badge badge-role">{{ empleado.roles }}</span>
+                                    {% else %}
+                                        <span class="badge badge-sin-rol">Sin rol</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('usuarios.editar', id_persona=empleado.id_persona) }}" class="btn btn-sm btn-info">✏️</a>
+                                    <form method="POST" action="{{ url_for('usuarios.eliminar', id_persona=empleado.id_persona) }}" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este empleado?')">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>No hay empleados registrados</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- CLIENTES -->
+            <div id="clientes" class="tab-content">
+                <h2>Clientes Registrados</h2>
+                {% if clientes %}
+                <div class="usuarios-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Tipo</th>
+                                <th>Categoría</th>
+                                <th>Empresa</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cliente in clientes %}
+                            <tr>
+                                <td><strong>#{{ cliente.id_persona }}</strong></td>
+                                <td>{{ cliente.nombre }} {{ cliente.apellido_paterno }}</td>
+                                <td>{{ cliente.email }}</td>
+                                <td>
+                                    <span class="badge badge-tipo">{{ cliente.tipo_cliente }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-categoria">{{ cliente.categoria_cliente }}</span>
+                                </td>
+                                <td>{{ cliente.empresa or '-' }}</td>
+                                <td>
+                                    <a href="{{ url_for('usuarios.editar', id_persona=cliente.id_persona) }}" class="btn btn-sm btn-info">✏️</a>
+                                    <form method="POST" action="{{ url_for('usuarios.eliminar', id_persona=cliente.id_persona) }}" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este cliente?')">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>No hay clientes registrados</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- TAB: CREAR USUARIO -->
+        {% elif tab == 'crear' %}
+        <section class="form-section">
+            <h2>Crear Nuevo Usuario</h2>
+            
+            <form method="POST" class="usuarios-form">
+                <div class="form-group">
+                    <label for="tipo_usuario">Tipo de Usuario *</label>
+                    <select id="tipo_usuario" name="tipo_usuario" required onchange="cambiarTipoUsuario()">
+                        <option value="">-- Seleccionar --</option>
+                        <option value="empleado">Empleado</option>
+                        <option value="cliente">Cliente</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre">Nombre *</label>
+                        <input type="text" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido_paterno">Apellido Paterno *</label>
+                        <input type="text" id="apellido_paterno" name="apellido_paterno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido_materno">Apellido Materno</label>
+                        <input type="text" id="apellido_materno" name="apellido_materno">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ci">CI *</label>
+                        <input type="number" id="ci" name="ci" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                        <input type="date" id="fecha_nacimiento" name="fecha_nacimiento">
+                    </div>
+                    <div class="form-group">
+                        <label for="contra">Contraseña *</label>
+                        <input type="password" id="contra" name="contra" required>
+                    </div>
+                </div>
+
+                <!-- CAMPOS EMPLEADO -->
+                <div id="campos_empleado" style="display: none;">
+                    <div class="form-group">
+                        <label for="id_rol">Rol</label>
+                        <select id="id_rol" name="id_rol">
+                            <option value="">-- Seleccionar Rol --</option>
+                            {% for rol in roles %}
+                            <option value="{{ rol.id_rol }}">{{ rol.nombre_rol }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CAMPOS CLIENTE -->
+                <div id="campos_cliente" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tipo_cliente">Tipo de Cliente</label>
+                            <select id="tipo_cliente" name="tipo_cliente">
+                                <option value="Minorista">Minorista</option>
+                                <option value="Mayorista">Mayorista</option>
+                                <option value="Empresa">Empresa</option>
+                                <option value="Distribuidor">Distribuidor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria_cliente">Categoría</label>
+                            <select id="categoria_cliente" name="categoria_cliente">
+                                <option value="Básico">Básico</option>
+                                <option value="Preferente">Preferente</option>
+                                <option value="Corporativo">Corporativo</option>
+                                <option value="Élite">Élite</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="empresa">Empresa</label>
+                            <input type="text" id="empresa" name="empresa">
+                        </div>
+                        <div class="form-group">
+                            <label for="limite_credito">Límite de Crédito</label>
+                            <input type="number" id="limite_credito" name="limite_credito" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Crear Usuario</button>
+                    <a href="{{ url_for('usuarios.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: EDITAR USUARIO -->
+        {% elif tab == 'editar' %}
+        <section class="form-section">
+            <h2>Editar Usuario</h2>
+            
+            <form method="POST" class="usuarios-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre">Nombre *</label>
+                        <input type="text" id="nombre" name="nombre" required value="{{ persona.nombre }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido_paterno">Apellido Paterno *</label>
+                        <input type="text" id="apellido_paterno" name="apellido_paterno" required value="{{ persona.apellido_paterno }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido_materno">Apellido Materno</label>
+                        <input type="text" id="apellido_materno" name="apellido_materno" value="{{ persona.apellido_materno or '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required value="{{ persona.email }}">
+                    </div>
+                    <div class="form-group">
+                        <label>CI</label>
+                        <input type="text" value="{{ persona.ci }}" disabled>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" value="{{ persona.fecha_nacimiento or '' }}">
+                </div>
+
+                <!-- EMPLEADO -->
+                {% if not es_cliente %}
+                <div class="form-group">
+                    <label for="id_rol">Rol</label>
+                    <select id="id_rol" name="id_rol">
+                        <option value="">-- Seleccionar Rol --</option>
+                        {% for rol in roles %}
+                        <option value="{{ rol.id_rol }}" {% if rol_actual == rol.id_rol %}selected{% endif %}>{{ rol.nombre_rol }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <!-- CLIENTE -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipo_cliente">Tipo de Cliente</label>
+                        <select id="tipo_cliente" name="tipo_cliente">
+                            <option value="Minorista" {% if cliente_data.tipo_cliente == 'Minorista' %}selected{% endif %}>Minorista</option>
+                            <option value="Mayorista" {% if cliente_data.tipo_cliente == 'Mayorista' %}selected{% endif %}>Mayorista</option>
+                            <option value="Empresa" {% if cliente_data.tipo_cliente == 'Empresa' %}selected{% endif %}>Empresa</option>
+                            <option value="Distribuidor" {% if cliente_data.tipo_cliente == 'Distribuidor' %}selected{% endif %}>Distribuidor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoria_cliente">Categoría</label>
+                        <select id="categoria_cliente" name="categoria_cliente">
+                            <option value="Básico" {% if cliente_data.categoria_cliente == 'Básico' %}selected{% endif %}>Básico</option>
+                            <option value="Preferente" {% if cliente_data.categoria_cliente == 'Preferente' %}selected{% endif %}>Preferente</option>
+                            <option value="Corporativo" {% if cliente_data.categoria_cliente == 'Corporativo' %}selected{% endif %}>Corporativo</option>
+                            <option value="Élite" {% if cliente_data.categoria_cliente == 'Élite' %}selected{% endif %}>Élite</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="empresa">Empresa</label>
+                        <input type="text" id="empresa" name="empresa" value="{{ cliente_data.empresa or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="limite_credito">Límite de Crédito</label>
+                        <input type="number" id="limite_credito" name="limite_credito" step="0.01" min="0" value="{{ cliente_data.limite_credito or 0 }}">
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Actualizar</button>
+                    <a href="{{ url_for('usuarios.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+        {% endif %}
+    </main>
+</div>
+
+<script>
+function cambiarTipoUsuario() {
+    const tipo = document.getElementById('tipo_usuario').value;
+    document.getElementById('campos_empleado').style.display = tipo === 'empleado' ? 'block' : 'none';
+    document.getElementById('campos_cliente').style.display = tipo === 'cliente' ? 'block' : 'none';
+}
+
+function mostrarTab(tabName) {
+    const tabs = document.querySelectorAll('.tab-content');
+    const buttons = document.querySelectorAll('.tab-btn');
+    
+    tabs.forEach(tab => tab.classList.remove('active'));
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabName).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

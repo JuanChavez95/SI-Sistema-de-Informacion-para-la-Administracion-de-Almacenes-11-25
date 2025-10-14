@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <meta name="author" content="Equipo Error 505">
     <meta name="description" content="Sistema de almacenes para la empresa Forno, desarrollo para mejorar la eficiencia en el almacen de productos, junto a las entradas y salidas">
     <meta name="keywords" content="Empresa Forno, Sistema de Almacen, Almacenes Bolivia, Almacenes La Paz, Empresa de almacen Forno">
     <meta name="robots" content="noimageindex, noarchive">
     <title>{% block title %}Grupo Forno - Sistema de Almacenes{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-pagina.png') }}">
 </head>
 <body>
     {% with messages = get_flashed_messages(with_categories=true) %}

@@ -10,9 +10,12 @@ def create_app():
     # Registrar blueprints
     from app.controllers import auth, dashboard
     from app.controllers import almacen
+    from app.controllers import usuarios
+
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(almacen.almacen_bp)
+    app.register_blueprint(usuarios.usuarios_bp)
     
     print("✅ App Flask creada exitosamente")
     print(f"   Base de datos: {Config.MYSQL_DB}")

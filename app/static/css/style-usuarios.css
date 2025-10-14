@@ -1,0 +1,399 @@
+/* ========================================
+ESTILOS DEL MÓDULO DE USUARIOS
+   ======================================== */
+
+/* SECCIONES */
+.usuarios-section,
+.form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+}
+
+/* TABS */
+.tabs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--gris-claro);
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: 2px solid var(--gris-claro);
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    color: var(--gris-oscuro);
+}
+
+.tab-btn:hover {
+    border-color: var(--morado);
+    color: var(--morado);
+}
+
+.tab-btn.active {
+    background: var(--morado);
+    color: white;
+    border-color: var(--morado);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tab-content h2 {
+    margin-bottom: 20px;
+    color: var(--negro);
+    font-size: 20px;
+}
+
+/* TABLA DE USUARIOS */
+.usuarios-table {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.usuarios-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    table-layout: auto;
+}
+
+.usuarios-table table thead {
+    background: linear-gradient(135deg, var(--morado-light) 0%, var(--morado) 100%);
+    color: white;
+}
+
+.usuarios-table table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 700;
+    color: white;
+    border: none;
+    white-space: nowrap;
+}
+
+.usuarios-table table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    color: var(--negro);
+    vertical-align: middle;
+    text-align: left;
+}
+
+.usuarios-table table tbody td:last-child {
+    border-right: none;
+}
+
+.usuarios-table table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.usuarios-table table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.usuarios-table table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.usuarios-table table tbody tr td:first-child {
+    font-weight: 700;
+    color: var(--morado);
+    min-width: 70px;
+}
+
+/* BADGES */
+.badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.badge-role {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #0c4a6e;
+}
+
+.badge-sin-rol {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+    color: #374151;
+}
+
+.badge-tipo {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    color: #3730a3;
+}
+
+.badge-categoria {
+    background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+    color: #831843;
+}
+
+/* BOTONES EN TABLA */
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 13px;
+    margin-right: 6px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, var(--morado) 0%, var(--morado-dark) 100%);
+    color: white;
+}
+
+.btn-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* FORMULARIOS */
+.usuarios-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--negro);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px 16px;
+    border: 2px solid var(--gris-claro);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.3s;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--morado);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.form-group input:disabled {
+    background: var(--gris);
+    cursor: not-allowed;
+    color: var(--gris-oscuro);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-nuevo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    flex: 1;
+}
+
+.btn-secondary {
+    background: var(--gris-oscuro);
+    color: white;
+    flex: 1;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background: var(--negro);
+}
+
+/* ESTADO VACÍO */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--gris);
+    border-radius: 8px;
+    color: var(--gris-oscuro);
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    table {
+        font-size: 13px;
+    }
+
+    table th,
+    table td {
+        padding: 10px;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tabs-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .tab-buttons {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .btn-nuevo {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    table th,
+    table td {
+        padding: 10px 8px;
+    }
+
+    .usuarios-table {
+        border-radius: 0;
+        margin: 0 -24px;
+        width: calc(100% + 48px);
+    }
+
+    .badge {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .btn-sm {
+        padding: 6px 10px;
+        font-size: 12px;
+        margin-right: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .usuarios-section,
+    .form-section {
+        padding: 16px;
+    }
+
+    table {
+        font-size: 11px;
+    }
+
+    table th,
+    table td {
+        padding: 6px;
+    }
+
+    .tab-btn {
+        min-width: 100px;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}
