@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Empresas - Grupo Forno{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-empresas.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 150px; height: 75px; object-fit: contain;">
+            </div>
+            <h2>Grupo Forno</h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">{{ session.user_name[0] }}</div>
+            <div class="user-details">
+                <p class="user-name">{{ session.user_name }}</p>
+                <p class="user-role">{{ session.user_role }}</p>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('empresas.index') }}" class="nav-item active">
+                <span class="nav-icon">🏢</span>
+                <span>Empresas</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-logout">
+                <span>🚪</span> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="content-header">
+            <h1>Gestión de Empresas</h1>
+            <p>Administra empresas que confían sus productos</p>
+        </header>
+
+        <!-- TAB: LISTA DE EMPRESAS -->
+        {% if tab == 'lista' %}
+        <section class="empresas-section">
+            <div class="section-header">
+                <h2>Empresas Registradas</h2>
+                <div class="header-actions">
+                    <form method="GET" action="{{ url_for('empresas.buscar') }}" class="search-form">
+                        <input type="text" name="q" placeholder="Buscar por nombre, empresa o NIT..." 
+                               value="{{ query if query else '' }}">
+                        <button type="submit" class="btn btn-search">🔍 Buscar</button>
+                    </form>
+                    <a href="{{ url_for('empresas.crear') }}" class="btn btn-primary btn-nuevo">
+                        <span>➕</span> Nueva Empresa
+                    </a>
+                </div>
+            </div>
+
+            {% if empresas %}
+            <div class="empresas-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>NIT</th>
+                            <th>Nombre</th>
+                            <th>Empresa</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empresa in empresas %}
+                        <tr>
+                            <td><strong>#{{ empresa.id_proveedor }}</strong></td>
+                            <td>{{ empresa.nit }}</td>
+                            <td>{{ empresa.nombre_proveedor }}</td>
+                            <td>{{ empresa.empresa or '-' }}</td>
+                            <td>{{ empresa.telefono or '-' }}</td>
+                            <td>{{ empresa.direccion or '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('empresas.ver_detalle', id_proveedor=empresa.id_proveedor) }}" 
+                                   class="btn btn-sm btn-info">📋</a>
+                                <a href="{{ url_for('empresas.editar', id_proveedor=empresa.id_proveedor) }}" 
+                                   class="btn btn-sm btn-warning">✏️</a>
+                                <form method="POST" action="{{ url_for('empresas.eliminar', id_proveedor=empresa.id_proveedor) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('¿Eliminar esta empresa?')">🗑️</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No hay empresas registradas{% if query %} que coincidan con "{{ query }}"{% endif %}</p>
+                <a href="{{ url_for('empresas.crear') }}" class="btn btn-primary">Crear Empresa</a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- TAB: CREAR EMPRESA -->
+        {% elif tab == 'crear' %}
+        <section class="form-section">
+            <h2>Registrar Nueva Empresa</h2>
+            
+            <form method="POST" class="empresas-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nit">NIT *</label>
+                        <input type="number" id="nit" name="nit" required placeholder="123456789">
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre_proveedor">Nombre Contacto *</label>
+                        <input type="text" id="nombre_proveedor" name="nombre_proveedor" required 
+                               placeholder="Juan Pérez">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="empresa">Razón Social / Empresa</label>
+                    <input type="text" id="empresa" name="empresa" 
+                           placeholder="Distribuidora XYZ S.A.">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="number" id="telefono" name="telefono" placeholder="70123456">
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" 
+                               placeholder="Av. Principal #123">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Crear Empresa</button>
+                    <a href="{{ url_for('empresas.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: EDITAR EMPRESA -->
+        {% elif tab == 'editar' %}
+        <section class="form-section">
+            <h2>Editar Empresa</h2>
+            
+            <form method="POST" class="empresas-form">
+                <div class="form-group">
+                    <label>NIT</label>
+                    <input type="text" value="{{ empresa.nit }}" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombre_proveedor">Nombre Contacto *</label>
+                    <input type="text" id="nombre_proveedor" name="nombre_proveedor" required 
+                           value="{{ empresa.nombre_proveedor }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="empresa">Razón Social / Empresa</label>
+                    <input type="text" id="empresa" name="empresa" 
+                           value="{{ empresa.empresa or '' }}">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="number" id="telefono" name="telefono" 
+                               value="{{ empresa.telefono or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" 
+                               value="{{ empresa.direccion or '' }}">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Actualizar</button>
+                    <a href="{{ url_for('empresas.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: DETALLE EMPRESA -->
+        {% elif tab == 'detalle' %}
+        <section class="detalle-section">
+            <div class="detalle-header">
+                <div class="detalle-info">
+                    <h2>{{ empresa.empresa or empresa.nombre_proveedor }}</h2>
+                    <p class="empresa-nit">NIT: {{ empresa.nit }}</p>
+                </div>
+                <div class="detalle-actions">
+                    <a href="{{ url_for('empresas.editar', id_proveedor=empresa.id_proveedor) }}" 
+                       class="btn btn-warning">✏️ Editar</a>
+                    <a href="{{ url_for('empresas.index') }}" class="btn btn-secondary">← Volver</a>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <span class="info-label">Contacto</span>
+                    <span class="info-value">{{ empresa.nombre_proveedor }}</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Teléfono</span>
+                    <span class="info-value">{{ empresa.telefono or 'No registrado' }}</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Dirección</span>
+                    <span class="info-value">{{ empresa.direccion or 'No registrada' }}</span>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DE PEDIDOS -->
+            <div class="historial-section">
+                <h3>📦 Historial de Recepciones</h3>
+                
+                {% if pedidos %}
+                <div class="pedidos-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nº Doc.</th>
+                                <th>Fecha Pedido</th>
+                                <th>Fecha Entrega</th>
+                                <th>Productos</th>
+                                <th>Cantidad Total</th>
+                                <th>Precio Total</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos %}
+                            <tr>
+                                <td><strong>#{{ pedido.id_pedido }}</strong></td>
+                                <td>{{ pedido.numero_documento or '-' }}</td>
+                                <td>{{ pedido.fecha_pedido }}</td>
+                                <td>{{ pedido.fecha_entrega or 'Pendiente' }}</td>
+                                <td>{{ pedido.total_productos or 0 }}</td>
+                                <td>{{ pedido.cantidad_total or 0 }}</td>
+                                <td>Bs. {{ "%.2f"|format(pedido.precio_total or 0) }}</td>
+                                <td>
+                                    <span class="badge badge-{{ pedido.estado.lower() if pedido.estado else 'pendiente' }}">
+                                        {{ pedido.estado or 'Pendiente' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>No hay recepciones registradas para esta empresa</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
