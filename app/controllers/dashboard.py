@@ -47,9 +47,9 @@ def index():
         {
             'nombre': 'Recepciones',
             'icono': '📥',
-            'descripcion': 'Entrada de mercancía de empresas',
-            'url': '#',  # Tabla: Pedido (de Proveedores)
-            'color': 'negro'
+            'descripcion': 'Entrada de mercancía',
+            'url': url_for('recepciones.index'),
+            'color': 'morado'
         },
         {
             'nombre': 'Despachos',

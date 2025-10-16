@@ -1,0 +1,545 @@
+/* ========================================
+   ESTILOS DEL MÓDULO DE RECEPCIONES
+   ======================================== */
+
+/* SECCIONES */
+.recepciones-section,
+.form-section,
+.detalle-section,
+.productos-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--gris-claro);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: var(--negro);
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-nuevo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* TABLAS */
+.recepciones-table,
+.detalles-table,
+.productos-table {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.recepciones-table table,
+.detalles-table table,
+.productos-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+
+.recepciones-table table thead,
+.detalles-table table thead,
+.productos-table table thead {
+    background: linear-gradient(135deg, var(--morado-light) 0%, var(--morado) 100%);
+    color: white;
+}
+
+.recepciones-table table th,
+.detalles-table table th,
+.productos-table table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+}
+
+.recepciones-table table tbody td,
+.detalles-table table tbody td,
+.productos-table table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    color: var(--negro);
+    vertical-align: middle;
+}
+
+.recepciones-table table tbody td:last-child,
+.detalles-table table tbody td:last-child,
+.productos-table table tbody td:last-child {
+    border-right: none;
+}
+
+.recepciones-table table tbody tr:hover,
+.detalles-table table tbody tr:hover,
+.productos-table table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.recepciones-table table tbody tr:last-child td,
+.detalles-table table tbody tr:last-child td,
+.productos-table table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.recepciones-table table tbody tr td:first-child,
+.detalles-table table tbody tr td:first-child,
+.productos-table table tbody tr td:first-child {
+    font-weight: 700;
+    color: var(--morado);
+}
+
+/* BADGES */
+.badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-recibido {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-parcial {
+    background: #dbeafe;
+    color: #0c4a6e;
+}
+
+.badge-cancelado {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* BOTONES */
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 13px;
+    margin-right: 6px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    color: white;
+}
+
+.btn-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-secondary {
+    background: var(--gris-oscuro);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background: var(--negro);
+}
+
+/* FORMULARIOS */
+.recepciones-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--negro);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px 16px;
+    border: 2px solid var(--gris-claro);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--morado);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.form-actions .btn {
+    flex: 1;
+}
+
+/* PRODUCTOS DINÁMICOS */
+#productosContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.producto-item {
+    background: var(--gris);
+    padding: 16px;
+    border-radius: 8px;
+    border: 2px solid var(--gris-claro);
+}
+
+.form-row-productos {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.btn-remove-producto {
+    padding: 10px 14px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.btn-remove-producto:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+/* DETALLE */
+.detalle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--gris-claro);
+}
+
+.detalle-info h2 {
+    margin: 0 0 6px 0;
+    font-size: 28px;
+    color: var(--negro);
+}
+
+.empresa-info {
+    color: var(--gris-oscuro);
+    font-size: 14px;
+}
+
+.detalle-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.info-card {
+    background: var(--gris);
+    padding: 16px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--gris-oscuro);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.info-value {
+    font-size: 16px;
+    color: var(--negro);
+    font-weight: 600;
+}
+
+.detalles-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid var(--gris-claro);
+}
+
+.detalles-section h3 {
+    margin-bottom: 20px;
+    color: var(--negro);
+}
+
+/* GESTIÓN DE PRODUCTOS */
+.productos-crear {
+    background: var(--gris);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+.productos-crear h3 {
+    margin-bottom: 16px;
+    color: var(--negro);
+}
+
+.producto-form-inline {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1.5fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.producto-form-inline .form-group {
+    margin: 0;
+}
+
+.producto-form-inline input,
+.producto-form-inline select {
+    width: 100%;
+}
+
+/* ESTADO VACÍO */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--gris);
+    border-radius: 8px;
+}
+
+.empty-state p {
+    color: var(--gris-oscuro);
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .form-row-productos {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .btn-remove-producto {
+        grid-column: span 2;
+    }
+
+    .producto-form-inline {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .producto-form-inline .btn {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .detalle-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .detalle-actions {
+        width: 100%;
+    }
+
+    .detalle-actions .btn {
+        flex: 1;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row-productos {
+        grid-template-columns: 1fr;
+    }
+
+    .btn-remove-producto {
+        grid-column: 1;
+        width: 100%;
+    }
+
+    .producto-form-inline {
+        grid-template-columns: 1fr;
+    }
+
+    .producto-form-inline .btn {
+        grid-column: 1;
+    }
+
+    .recepciones-table,
+    .detalles-table,
+    .productos-table {
+        border-radius: 0;
+        margin: 0 -24px;
+        width: calc(100% + 48px);
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    table th,
+    table td {
+        padding: 10px 8px;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .btn-sm {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .recepciones-section,
+    .form-section,
+    .detalle-section,
+    .productos-section {
+        padding: 16px;
+    }
+
+    .detalle-info h2 {
+        font-size: 22px;
+    }
+
+    table {
+        font-size: 11px;
+    }
+
+    table th,
+    table td {
+        padding: 8px 6px;
+    }
+}
+
+/* ANIMACIONES */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.recepciones-section,
+.form-section,
+.detalle-section,
+.productos-section {
+    animation: fadeIn 0.3s ease;
+}

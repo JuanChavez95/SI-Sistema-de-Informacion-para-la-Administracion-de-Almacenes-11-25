@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Recepciones - Grupo Forno{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-recepciones.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 150px; height: 75px; object-fit: contain;">
+            </div>
+            <h2>Grupo Forno</h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">{{ session.user_name[0] }}</div>
+            <div class="user-details">
+                <p class="user-name">{{ session.user_name }}</p>
+                <p class="user-role">{{ session.user_role }}</p>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('recepciones.index') }}" class="nav-item active">
+                <span class="nav-icon">📥</span>
+                <span>Recepciones</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-logout">
+                <span>🚪</span> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="content-header">
+            <h1>Gestión de Recepciones</h1>
+            <p>Registro de entrada de mercancía de empresas</p>
+        </header>
+
+        <!-- TAB: LISTA DE RECEPCIONES -->
+        {% if tab == 'lista' %}
+        <section class="recepciones-section">
+            <div class="section-header">
+                <h2>Recepciones Registradas</h2>
+                <div class="header-actions">
+                    <a href="{{ url_for('recepciones.listar_productos') }}" class="btn btn-secondary">
+                        📦 Gestionar Productos
+                    </a>
+                    <a href="{{ url_for('recepciones.crear') }}" class="btn btn-primary btn-nuevo">
+                        <span>➕</span> Nueva Recepción
+                    </a>
+                </div>
+            </div>
+
+            {% if recepciones %}
+            <div class="recepciones-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Empresa</th>
+                            <th>Nº Doc.</th>
+                            <th>Fecha Pedido</th>
+                            <th>Fecha Entrega</th>
+                            <th>Productos</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recepcion in recepciones %}
+                        <tr>
+                            <td><strong>#{{ recepcion.id_pedido }}</strong></td>
+                            <td>{{ recepcion.empresa or recepcion.nombre_proveedor }}</td>
+                            <td>{{ recepcion.numero_documento or '-' }}</td>
+                            <td>{{ recepcion.fecha_pedido }}</td>
+                            <td>{{ recepcion.fecha_entrega or 'Pendiente' }}</td>
+                            <td>{{ recepcion.total_productos or 0 }}</td>
+                            <td>{{ recepcion.cantidad_total or 0 }}</td>
+                            <td>Bs. {{ "%.2f"|format(recepcion.precio_total or 0) }}</td>
+                            <td>
+                                <span class="badge badge-{{ recepcion.estado.lower() if recepcion.estado else 'pendiente' }}">
+                                    {{ recepcion.estado or 'Pendiente' }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('recepciones.ver_detalle', id_pedido=recepcion.id_pedido) }}" 
+                                   class="btn btn-sm btn-info">📋</a>
+                                <a href="{{ url_for('recepciones.editar', id_pedido=recepcion.id_pedido) }}" 
+                                   class="btn btn-sm btn-warning">✏️</a>
+                                <form method="POST" action="{{ url_for('recepciones.eliminar', id_pedido=recepcion.id_pedido) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('¿Eliminar esta recepción?')">🗑️</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No hay recepciones registradas</p>
+                <a href="{{ url_for('recepciones.crear') }}" class="btn btn-primary">Crear Recepción</a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- TAB: CREAR RECEPCIÓN -->
+        {% elif tab == 'crear' %}
+        <section class="form-section">
+            <h2>Registrar Nueva Recepción</h2>
+            
+            <form method="POST" class="recepciones-form" id="formRecepcion">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_proveedor">Empresa *</label>
+                        <select id="id_proveedor" name="id_proveedor" required>
+                            <option value="">-- Seleccionar Empresa --</option>
+                            {% for empresa in empresas %}
+                            <option value="{{ empresa.id_proveedor }}">
+                                {{ empresa.empresa or empresa.nombre_proveedor }} (NIT: {{ empresa.nit }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="numero_documento">Número Documento</label>
+                        <input type="number" id="numero_documento" name="numero_documento">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fecha_pedido">Fecha de Pedido *</label>
+                        <input type="date" id="fecha_pedido" name="fecha_pedido" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fecha_entrega">Fecha de Entrega</label>
+                        <input type="date" id="fecha_entrega" name="fecha_entrega">
+                    </div>
+                    <div class="form-group">
+                        <label for="estado">Estado</label>
+                        <select id="estado" name="estado">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Recibido">Recibido</option>
+                            <option value="Parcial">Parcial</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr>
+                <h3>Productos</h3>
+                <div id="productosContainer">
+                    <div class="producto-item">
+                        <div class="form-row-productos">
+                            <div class="form-group">
+                                <label>Producto *</label>
+                                <select name="producto_id[]" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    {% for producto in productos %}
+                                    <option value="{{ producto.id_producto }}">
+                                        {{ producto.marca }} - {{ producto.nombre_categoria }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Cantidad *</label>
+                                <input type="number" name="cantidad[]" required min="1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Precio Unit. *</label>
+                                <input type="number" name="precio_unitario[]" required step="0.01" min="0">
+                            </div>
+                            <button type="button" class="btn-remove-producto" onclick="removeProducto(this)">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-secondary" onclick="addProducto()">
+                    ➕ Agregar Producto
+                </button>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Crear Recepción</button>
+                    <a href="{{ url_for('recepciones.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: DETALLE -->
+        {% elif tab == 'detalle' %}
+        <section class="detalle-section">
+            <div class="detalle-header">
+                <div class="detalle-info">
+                    <h2>Recepción #{{ pedido.id_pedido }}</h2>
+                    <p class="empresa-info">{{ pedido.empresa or pedido.nombre_proveedor }} - NIT: {{ pedido.nit }}</p>
+                </div>
+                <div class="detalle-actions">
+                    <a href="{{ url_for('recepciones.editar', id_pedido=pedido.id_pedido) }}" 
+                       class="btn btn-warning">✏️ Editar</a>
+                    <a href="{{ url_for('recepciones.index') }}" class="btn btn-secondary">← Volver</a>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <span class="info-label">Nº Documento</span>
+                    <span class="info-value">{{ pedido.numero_documento or 'S/N' }}</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Fecha Pedido</span>
+                    <span class="info-value">{{ pedido.fecha_pedido }}</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Fecha Entrega</span>
+                    <span class="info-value">{{ pedido.fecha_entrega or 'Pendiente' }}</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Estado</span>
+                    <span class="badge badge-{{ pedido.estado.lower() if pedido.estado else 'pendiente' }}">
+                        {{ pedido.estado or 'Pendiente' }}
+                    </span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Total</span>
+                    <span class="info-value">Bs. {{ "%.2f"|format(pedido.precio_total or 0) }}</span>
+                </div>
+            </div>
+
+            <div class="detalles-section">
+                <h3>📦 Productos Recibidos</h3>
+                
+                {% if detalles %}
+                <div class="detalles-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Producto</th>
+                                <th>Categoría</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in detalles %}
+                            <tr>
+                                <td><strong>#{{ detalle.id_producto }}</strong></td>
+                                <td>{{ detalle.marca }}</td>
+                                <td>{{ detalle.nombre_categoria }}</td>
+                                <td>{{ detalle.cantidad }}</td>
+                                <td>Bs. {{ "%.2f"|format(detalle.precio_unitario) }}</td>
+                                <td>Bs. {{ "%.2f"|format(detalle.cantidad * detalle.precio_unitario) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- TAB: EDITAR -->
+        {% elif tab == 'editar' %}
+        <section class="form-section">
+            <h2>Editar Recepción</h2>
+            
+            <form method="POST" class="recepciones-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numero_documento">Número Documento</label>
+                        <input type="number" id="numero_documento" name="numero_documento" 
+                               value="{{ pedido.numero_documento or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="fecha_pedido">Fecha de Pedido *</label>
+                        <input type="date" id="fecha_pedido" name="fecha_pedido" required
+                               value="{{ pedido.fecha_pedido }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fecha_entrega">Fecha de Entrega</label>
+                        <input type="date" id="fecha_entrega" name="fecha_entrega"
+                               value="{{ pedido.fecha_entrega or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="estado">Estado</label>
+                        <select id="estado" name="estado">
+                            <option value="Pendiente" {% if pedido.estado == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                            <option value="Recibido" {% if pedido.estado == 'Recibido' %}selected{% endif %}>Recibido</option>
+                            <option value="Parcial" {% if pedido.estado == 'Parcial' %}selected{% endif %}>Parcial</option>
+                            <option value="Cancelado" {% if pedido.estado == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Actualizar</button>
+                    <a href="{{ url_for('recepciones.ver_detalle', id_pedido=pedido.id_pedido) }}" 
+                       class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: PRODUCTOS -->
+        {% elif tab == 'productos' %}
+        <section class="productos-section">
+            <div class="section-header">
+                <h2>Gestión de Productos</h2>
+                <a href="{{ url_for('recepciones.index') }}" class="btn btn-secondary">← Volver a Recepciones</a>
+            </div>
+
+            <div class="productos-crear">
+                <h3>Crear Nuevo Producto</h3>
+                <form method="POST" action="{{ url_for('recepciones.crear_producto') }}" class="producto-form-inline">
+                    <div class="form-group">
+                        <input type="text" name="marca" placeholder="Marca del producto *" required>
+                    </div>
+                    <div class="form-group">
+                        <select name="id_categoria_producto" required>
+                            <option value="">-- Categoría *</option>
+                            {% for cat in categorias %}
+                            <option value="{{ cat.id_categoria_producto }}">{{ cat.nombre_categoria }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="date" name="fecha_fabricacion" placeholder="Fecha Fabricación">
+                    </div>
+                    <div class="form-group">
+                        <input type="number" name="costo_inicial" placeholder="Costo" step="0.01" min="0">
+                    </div>
+                    <button type="submit" class="btn btn-primary">➕ Crear</button>
+                </form>
+            </div>
+
+            {% if productos %}
+            <h3>Productos Registrados</h3>
+            <div class="productos-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Marca</th>
+                            <th>Categoría</th>
+                            <th>Fecha Fabricación</th>
+                            <th>Costo Inicial</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td><strong>#{{ producto.id_producto }}</strong></td>
+                            <td>{{ producto.marca }}</td>
+                            <td>{{ producto.nombre_categoria }}</td>
+                            <td>{{ producto.fecha_fabricacion or '-' }}</td>
+                            <td>Bs. {{ "%.2f"|format(producto.costo_inicial or 0) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No hay productos registrados</p>
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+    </main>
+</div>
+
+<script>
+function addProducto() {
+    const container = document.getElementById('productosContainer');
+    const newItem = document.querySelector('.producto-item').cloneNode(true);
+    
+    newItem.querySelectorAll('input, select').forEach(input => {
+        if (input.type === 'number') {
+            input.value = input.name === 'cantidad[]' ? '1' : '';
+        } else {
+            input.value = '';
+        }
+    });
+    
+    container.appendChild(newItem);
+}
+
+function removeProducto(btn) {
+    const container = document.getElementById('productosContainer');
+    if (container.children.length > 1) {
+        btn.closest('.producto-item').remove();
+    } else {
+        alert('Debe haber al menos un producto');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaPedido = document.getElementById('fecha_pedido');
+    if (fechaPedido && !fechaPedido.value) {
+        const today = new Date().toISOString().split('T')[0];
+        fechaPedido.value = today;
+    }
+});
+</script>
+{% endblock %}
