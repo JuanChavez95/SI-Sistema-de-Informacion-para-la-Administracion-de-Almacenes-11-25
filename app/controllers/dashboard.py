@@ -61,9 +61,9 @@ def index():
         {
             'nombre': 'Movimientos',
             'icono': '🔄',
-            'descripcion': 'Traslados internos de productos',
-            'url': '#',  # Tabla: Movimiento_Producto
-            'color': 'negro'
+            'descripcion': 'Traslados y ajustes',
+            'url': url_for('movimientos.index'),
+            'color': 'morado'
         },
         {
             'nombre': 'Reportes',

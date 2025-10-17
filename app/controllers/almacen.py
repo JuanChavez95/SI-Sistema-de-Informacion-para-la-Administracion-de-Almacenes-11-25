@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from datetime import datetime
 import mysql.connector
 from app.config import Config
+
 almacen_bp = Blueprint('almacen', __name__, url_prefix='/almacenes')
 
 def get_db_connection():
@@ -13,12 +14,61 @@ def get_db_connection():
         database=Config.MYSQL_DB
     )
 
+def actualizar_capacidad_estante(cursor, id_estante):
+    """Actualizar capacidad_ocupada de un estante basado en su inventario"""
+    query = """
+        UPDATE Estante 
+        SET capacidad_ocupada = (
+            SELECT COALESCE(SUM(i.stock_producto), 0)
+            FROM Inventario i
+            WHERE i.id_estante = %s
+        )
+        WHERE id_estante = %s
+    """
+    cursor.execute(query, (id_estante, id_estante))
+
+def actualizar_capacidad_almacen(cursor, id_almacen):
+    """Actualizar capacidad_ocupada de un almacén basado en sus estantes"""
+    query = """
+        UPDATE Almacen 
+        SET capacidad_ocupada = (
+            SELECT COALESCE(SUM(e.capacidad_ocupada), 0)
+            FROM Estante e
+            WHERE e.id_almacen = %s
+        )
+        WHERE id_almacen = %s
+    """
+    cursor.execute(query, (id_almacen, id_almacen))
+
+def actualizar_todas_capacidades_almacen(cursor, id_almacen):
+    """Actualizar todas las capacidades en cascada: Inventario → Estante → Almacén"""
+    # Paso 1: Actualizar capacidad de todos los estantes del almacén
+    cursor.execute("SELECT id_estante FROM Estante WHERE id_almacen = %s", (id_almacen,))
+    estantes = cursor.fetchall()
+    
+    for estante in estantes:
+        # Acceder al diccionario correctamente
+        id_estante = estante['id_estante'] if isinstance(estante, dict) else estante[0]
+        actualizar_capacidad_estante(cursor, id_estante)
+    
+    # Paso 2: Actualizar capacidad del almacén
+    actualizar_capacidad_almacen(cursor, id_almacen)
+
 @almacen_bp.route('/', methods=['GET'])
 def index():
     """Listar todos los almacenes"""
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+        
+        # Actualizar capacidades de todos los almacenes
+        cursor.execute("SELECT id_almacen FROM Almacen")
+        almacenes_ids = cursor.fetchall()
+        
+        for alm in almacenes_ids:
+            actualizar_todas_capacidades_almacen(cursor, alm['id_almacen'])
+        
+        conn.commit()
         
         # Obtener almacenes con información del responsable
         query = """
@@ -92,6 +142,10 @@ def ver_detalle(id_almacen):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
+        # Actualizar capacidades antes de mostrar
+        actualizar_todas_capacidades_almacen(cursor, id_almacen)
+        conn.commit()
+        
         # Obtener almacén
         cursor.execute("""
             SELECT a.*, p.nombre, p.apellido_paterno 
@@ -103,6 +157,8 @@ def ver_detalle(id_almacen):
         
         if not almacen:
             flash('Almacén no encontrado', 'danger')
+            cursor.close()
+            conn.close()
             return redirect(url_for('almacen.index'))
         
         # Obtener estantes del almacén
@@ -129,6 +185,10 @@ def editar(id_almacen):
         cursor = conn.cursor(dictionary=True)
         
         if request.method == 'GET':
+            # Actualizar capacidades antes de mostrar
+            actualizar_todas_capacidades_almacen(cursor, id_almacen)
+            conn.commit()
+            
             cursor.execute("""
                 SELECT a.*, p.nombre, p.apellido_paterno 
                 FROM Almacen a 
@@ -157,6 +217,8 @@ def editar(id_almacen):
         
         if not nombre or not capacidad:
             flash('El nombre y capacidad son requeridos', 'warning')
+            cursor.close()
+            conn.close()
             return redirect(url_for('almacen.editar', id_almacen=id_almacen))
         
         query = """
@@ -164,7 +226,7 @@ def editar(id_almacen):
             SET nombre_almacen = %s, capacidad = %s, ubicacion = %s, id_persona = %s
             WHERE id_almacen = %s
         """
-        cursor.execute(query, (nombre, capacidad, ubicacion,  id_persona if id_persona else None, id_almacen))
+        cursor.execute(query, (nombre, capacidad, ubicacion, id_persona if id_persona else None, id_almacen))
         conn.commit()
         
         cursor.close()
@@ -247,6 +309,10 @@ def crear_estante(id_almacen):
         cursor.execute(query, (pasillo, capacidad, estado, id_almacen))
         conn.commit()
         
+        # Actualizar capacidad del almacén después de crear el estante
+        actualizar_capacidad_almacen(cursor, id_almacen)
+        conn.commit()
+        
         cursor.close()
         conn.close()
         
@@ -273,6 +339,14 @@ def editar_estante(id_estante):
             return redirect(url_for('almacen.index'))
         
         if request.method == 'GET':
+            # Actualizar capacidad antes de mostrar
+            actualizar_capacidad_estante(cursor, id_estante)
+            conn.commit()
+            
+            # Recargar el estante con datos actualizados
+            cursor.execute("SELECT * FROM Estante WHERE id_estante = %s", (id_estante,))
+            estante = cursor.fetchone()
+            
             cursor.close()
             conn.close()
             return render_template('modulos/almacen.html', tab='editar_estante', estante=estante)
@@ -294,6 +368,10 @@ def editar_estante(id_estante):
             WHERE id_estante = %s
         """
         cursor.execute(query, (pasillo, capacidad, estado, id_estante))
+        conn.commit()
+        
+        # Actualizar capacidad del almacén
+        actualizar_capacidad_almacen(cursor, estante['id_almacen'])
         conn.commit()
         
         cursor.close()
@@ -331,14 +409,20 @@ def eliminar_estante(id_estante):
             conn.close()
             return redirect(url_for('almacen.ver_detalle', id_almacen=estante['id_almacen']))
         
+        id_almacen = estante['id_almacen']
+        
         cursor.execute("DELETE FROM Estante WHERE id_estante = %s", (id_estante,))
+        conn.commit()
+        
+        # Actualizar capacidad del almacén después de eliminar
+        actualizar_capacidad_almacen(cursor, id_almacen)
         conn.commit()
         
         cursor.close()
         conn.close()
         
         flash('Estante eliminado exitosamente', 'success')
-        return redirect(url_for('almacen.ver_detalle', id_almacen=estante['id_almacen']))
+        return redirect(url_for('almacen.ver_detalle', id_almacen=id_almacen))
     except Exception as e:
         flash(f'Error al eliminar estante: {str(e)}', 'danger')
         return redirect(url_for('almacen.index'))

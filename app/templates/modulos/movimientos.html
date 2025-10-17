@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Movimientos - Grupo Forno{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-movimientos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 150px; height: 75px; object-fit: contain;">
+            </div>
+            <h2>Grupo Forno</h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">{{ session.user_name[0] }}</div>
+            <div class="user-details">
+                <p class="user-name">{{ session.user_name }}</p>
+                <p class="user-role">{{ session.user_role }}</p>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('movimientos.index') }}" class="nav-item active">
+                <span class="nav-icon">🔄</span>
+                <span>Movimientos</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-logout">
+                <span>🚪</span> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="content-header">
+            <h1>Gestión de Movimientos</h1>
+            <p>Asigna, traslada y ajusta productos en el inventario</p>
+        </header>
+
+        <!-- TAB: LISTA DE MOVIMIENTOS -->
+        {% if tab == 'lista' %}
+        <section class="movimientos-section">
+            <div class="section-header">
+                <h2>Historial de Movimientos</h2>
+                <div class="header-actions">
+                    <a href="{{ url_for('movimientos.asignar') }}" class="btn btn-primary">📥 Asignar</a>
+                    <a href="{{ url_for('movimientos.trasladar') }}" class="btn btn-secondary">🔄 Trasladar</a>
+                    <a href="{{ url_for('movimientos.ajustar') }}" class="btn btn-warning">⚙️ Ajustar</a>
+                </div>
+            </div>
+
+            {% if movimientos %}
+            <div class="movimientos-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Cantidad</th>
+                            <th>Motivo</th>
+                            <th>Responsable</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in movimientos %}
+                        <tr>
+                            <td><strong>#{{ mov.id_movimiento_producto }}</strong></td>
+                            <td>{{ mov.fecha_movimiento }}</td>
+                            <td>{{ mov.marca }}</td>
+                            <td>{{ mov.nombre_categoria }}</td>
+                            <td>{{ mov.cantidad_producto }}</td>
+                            <td>
+                                <span class="badge badge-{{ mov.motivo.lower().replace(' ', '-') }}">
+                                    {{ mov.motivo }}
+                                </span>
+                            </td>
+                            <td>{{ mov.nombre }} {{ mov.apellido_paterno if mov.nombre else 'Sistema' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No hay movimientos registrados</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- TAB: ASIGNAR -->
+        {% elif tab == 'asignar' %}
+        <section class="form-section">
+            <h2>📥 Asignar Producto a Inventario</h2>
+            <p class="form-subtitle">Ubica productos de recepciones en estantes específicos</p>
+            
+            <form method="POST" class="movimientos-form">
+                <div class="form-group">
+                    <label for="id_producto">Producto Pendiente *</label>
+                    <select id="id_producto" name="id_producto" required>
+                        <option value="">-- Seleccionar Producto --</option>
+                        {% for prod in productos %}
+                        <option value="{{ prod.id_producto }}">
+                            {{ prod.marca }} - {{ prod.nombre_categoria }} (Pendiente: {{ prod.pendiente_asignar }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_almacen">Almacén *</label>
+                        <select id="id_almacen" name="id_almacen" required onchange="cargarEstantes()">
+                            <option value="">-- Seleccionar Almacén --</option>
+                            {% for almacen in almacenes %}
+                            <option value="{{ almacen.id_almacen }}">{{ almacen.nombre_almacen }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_estante">Estante *</label>
+                        <select id="id_estante" name="id_estante" required>
+                            <option value="">-- Primero seleccione almacén --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cantidad">Cantidad *</label>
+                        <input type="number" id="cantidad" name="cantidad" required min="1">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Asignar al Inventario</button>
+                    <a href="{{ url_for('movimientos.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: TRASLADAR -->
+        {% elif tab == 'trasladar' %}
+        <section class="form-section">
+            <h2>🔄 Trasladar Producto</h2>
+            <p class="form-subtitle">Mueve productos entre estantes o almacenes</p>
+            
+            <form method="POST" class="movimientos-form">
+                <div class="form-group">
+                    <label for="id_inventario">Producto en Inventario *</label>
+                    <select id="id_inventario" name="id_inventario" required>
+                        <option value="">-- Seleccionar Producto --</option>
+                        {% for inv in inventarios %}
+                        <option value="{{ inv.id_inventario }}">
+                            {{ inv.marca }} - {{ inv.nombre_almacen }} / {{ inv.pasillo }} (Stock: {{ inv.stock_producto }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="almacen_destino">Almacén Destino *</label>
+                        <select id="almacen_destino" name="almacen_destino" required onchange="cargarEstantesDestino()">
+                            <option value="">-- Seleccionar Almacén --</option>
+                            {% for almacen in almacenes %}
+                            <option value="{{ almacen.id_almacen }}">{{ almacen.nombre_almacen }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_estante_destino">Estante Destino *</label>
+                        <select id="id_estante_destino" name="id_estante_destino" required>
+                            <option value="">-- Primero seleccione almacén --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cantidad">Cantidad *</label>
+                        <input type="number" id="cantidad" name="cantidad" required min="1">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">🔄 Realizar Traslado</button>
+                    <a href="{{ url_for('movimientos.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- TAB: AJUSTAR -->
+        {% elif tab == 'ajustar' %}
+        <section class="form-section">
+            <h2>⚙️ Ajustar Stock</h2>
+            <p class="form-subtitle">Corrige inventario por mermas, diferencias o errores</p>
+            
+            <form method="POST" class="movimientos-form">
+                <div class="form-group">
+                    <label for="id_inventario">Producto en Inventario *</label>
+                    <select id="id_inventario" name="id_inventario" required>
+                        <option value="">-- Seleccionar Producto --</option>
+                        {% for inv in inventarios %}
+                        <option value="{{ inv.id_inventario }}">
+                            {{ inv.marca }} - {{ inv.nombre_almacen }} / {{ inv.pasillo }} (Stock Actual: {{ inv.stock_producto }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ajuste">Ajuste (+ aumenta / - disminuye) *</label>
+                        <input type="number" id="ajuste" name="ajuste" required placeholder="Ej: -5 para reducir, +3 para aumentar">
+                    </div>
+                    <div class="form-group">
+                        <label for="motivo">Motivo *</label>
+                        <select id="motivo" name="motivo" required>
+                            <option value="Ajuste">Ajuste de Inventario</option>
+                            <option value="Merma">Merma</option>
+                            <option value="Daño">Producto Dañado</option>
+                            <option value="Corrección">Corrección de Error</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">💾 Aplicar Ajuste</button>
+                    <a href="{{ url_for('movimientos.index') }}" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </section>
+        {% endif %}
+    </main>
+</div>
+
+<script>
+function cargarEstantes() {
+    const almacenId = document.getElementById('id_almacen').value;
+    const estanteSelect = document.getElementById('id_estante');
+    
+    if (!almacenId) {
+        estanteSelect.innerHTML = '<option value="">-- Primero seleccione almacén --</option>';
+        return;
+    }
+    
+    fetch(`/movimientos/estantes/${almacenId}`)
+        .then(response => response.text())
+        .then(html => {
+            estanteSelect.innerHTML = html;
+        })
+        .catch(error => {
+            estanteSelect.innerHTML = '<option value="">Error al cargar estantes</option>';
+        });
+}
+</script>
+{% endblock %}
