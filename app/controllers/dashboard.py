@@ -41,7 +41,7 @@ def index():
             'nombre': 'Inventario',
             'icono': '📊',
             'descripcion': 'Control de stock por estante',
-            'url': '#',
+            'url': url_for('inventarios.index'),
             'color': 'morado'
         },
         {

@@ -14,6 +14,7 @@ def create_app():
     from app.controllers import empresas
     from app.controllers import recepciones
     from app.controllers import movimientos
+    from app.controllers import inventarios
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(almacen.almacen_bp)
@@ -21,6 +22,7 @@ def create_app():
     app.register_blueprint(empresas.empresas_bp)
     app.register_blueprint(recepciones.recepciones_bp)
     app.register_blueprint(movimientos.movimientos_bp)
+    app.register_blueprint(inventarios.inventarios_bp)
     
     print("✅ App Flask creada exitosamente")
     print(f"   Base de datos: {Config.MYSQL_DB}")

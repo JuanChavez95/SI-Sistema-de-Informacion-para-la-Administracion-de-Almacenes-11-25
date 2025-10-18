@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventario - Grupo Forno{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-inventarios.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
+                    alt="Grupo Forno" 
+                    style="width: 150px; height: 75px; object-fit: contain;">
+            </div>
+            <h2>Grupo Forno</h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">{{ session.user_name[0] }}</div>
+            <div class="user-details">
+                <p class="user-name">{{ session.user_name }}</p>
+                <p class="user-role">{{ session.user_role }}</p>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('inventarios.index') }}" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                <span>Inventario</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-logout">
+                <span>🚪</span> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="content-header">
+            <h1>Inventario General</h1>
+            <p>Visualización de stock y ubicaciones</p>
+        </header>
+
+        <!-- VISTA: INVENTARIO GENERAL -->
+        {% if not tab or tab != 'detalle' and tab != 'almacen' %}
+        <!-- Estadísticas -->
+        {% if estadisticas %}
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-info">
+                    <h3>{{ estadisticas.total_productos or 0 }}</h3>
+                    <p>Productos Diferentes</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <h3>{{ estadisticas.total_unidades or 0 }}</h3>
+                    <p>Unidades Totales</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏪</div>
+                <div class="stat-info">
+                    <h3>{{ estadisticas.total_almacenes or 0 }}</h3>
+                    <p>Almacenes Activos</p>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Filtros -->
+        <section class="filtros-section">
+            <h2>Filtros de Búsqueda</h2>
+            <form method="GET" class="filtros-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="busqueda">Buscar Producto</label>
+                        <input type="text" id="busqueda" name="busqueda" 
+                               placeholder="Nombre del producto..." 
+                               value="{{ filtro_busqueda }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="almacen">Almacén</label>
+                        <select id="almacen" name="almacen">
+                            <option value="">Todos los almacenes</option>
+                            {% for alm in almacenes %}
+                            <option value="{{ alm.id_almacen }}" {% if filtro_almacen|string == alm.id_almacen|string %}selected{% endif %}>
+                                {{ alm.nombre_almacen }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoria">Categoría</label>
+                        <select id="categoria" name="categoria">
+                            <option value="">Todas las categorías</option>
+                            {% for cat in categorias %}
+                            <option value="{{ cat.id_categoria_producto }}" {% if filtro_categoria|string == cat.id_categoria_producto|string %}selected{% endif %}>
+                                {{ cat.nombre_categoria }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="filtros-actions">
+                    <button type="submit" class="btn btn-primary">🔍 Aplicar Filtros</button>
+                    <a href="{{ url_for('inventarios.index') }}" class="btn btn-secondary">🔄 Limpiar</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- Tabla de Inventario -->
+        <section class="inventario-section">
+            <h2>Productos en Stock</h2>
+            {% if inventario %}
+            <div class="inventario-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Almacén</th>
+                            <th>Estante</th>
+                            <th>Stock</th>
+                            <th>Última Modificación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventario %}
+                        <tr>
+                            <td><strong>#{{ item.id_producto }}</strong></td>
+                            <td>{{ item.marca }}</td>
+                            <td>{{ item.nombre_categoria }}</td>
+                            <td>{{ item.nombre_almacen }}</td>
+                            <td>{{ item.pasillo }}</td>
+                            <td><span class="stock-badge">{{ item.stock_producto }}</span></td>
+                            <td>{{ item.fecha_modificacion }}</td>
+                            <td>
+                                <a href="{{ url_for('inventarios.detalle_producto', id_producto=item.id_producto) }}" 
+                                   class="btn btn-sm btn-info">📋 Ver</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No hay productos en inventario{% if filtro_busqueda or filtro_almacen or filtro_categoria %} con los filtros aplicados{% endif %}</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- VISTA: DETALLE DE PRODUCTO -->
+        {% elif tab == 'detalle' %}
+        <section class="detalle-section">
+            <div class="detalle-header">
+                <div>
+                    <h2>{{ producto.marca }}</h2>
+                    <p class="categoria-badge">{{ producto.nombre_categoria }}</p>
+                </div>
+                <a href="{{ url_for('inventarios.index') }}" class="btn btn-secondary">← Volver</a>
+            </div>
+
+            <div class="producto-info">
+                <div class="info-card">
+                    <span class="info-label">Stock Total</span>
+                    <span class="info-value">{{ stock_total }} unidades</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Costo Inicial</span>
+                    <span class="info-value">Bs. {{ "%.2f"|format(producto.costo_inicial or 0) }}</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Ubicaciones</span>
+                    <span class="info-value">{{ ubicaciones|length }} estantes</span>
+                </div>
+            </div>
+
+            <h3>Ubicaciones del Producto</h3>
+            {% if ubicaciones %}
+            <div class="ubicaciones-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Almacén</th>
+                            <th>Ubicación</th>
+                            <th>Estante/Pasillo</th>
+                            <th>Stock</th>
+                            <th>Última Actualización</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ub in ubicaciones %}
+                        <tr>
+                            <td><strong>{{ ub.nombre_almacen }}</strong></td>
+                            <td>{{ ub.ubicacion or '-' }}</td>
+                            <td>{{ ub.pasillo }}</td>
+                            <td><span class="stock-badge">{{ ub.stock_producto }}</span></td>
+                            <td>{{ ub.fecha_modificacion }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- VISTA: POR ALMACÉN -->
+        {% elif tab == 'almacen' %}
+        <section class="almacen-section">
+            <div class="almacen-header">
+                <div>
+                    <h2>{{ almacen.nombre_almacen }}</h2>
+                    <p>{{ almacen.ubicacion or 'Sin ubicación especificada' }}</p>
+                </div>
+                <a href="{{ url_for('inventarios.index') }}" class="btn btn-secondary">← Volver</a>
+            </div>
+
+            {% if stats %}
+            <div class="almacen-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Productos Diferentes</span>
+                    <span class="stat-value">{{ stats.total_productos or 0 }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Unidades Totales</span>
+                    <span class="stat-value">{{ stats.total_unidades or 0 }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Capacidad Total</span>
+                    <span class="stat-value">{{ stats.capacidad }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Capacidad Ocupada</span>
+                    <span class="stat-value">{{ stats.capacidad_ocupada }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <h3>Productos en este Almacén</h3>
+            {% if productos %}
+            <div class="productos-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Estante/Pasillo</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prod in productos %}
+                        <tr>
+                            <td><strong>{{ prod.marca }}</strong></td>
+                            <td>{{ prod.nombre_categoria }}</td>
+                            <td>{{ prod.pasillo }}</td>
+                            <td><span class="stock-badge">{{ prod.stock_producto }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No hay productos en este almacén</p>
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
