@@ -73,6 +73,7 @@
                             <th>Fecha</th>
                             <th>Producto</th>
                             <th>Categoría</th>
+                            <th>Cliente/Empresa</th>
                             <th>Cantidad</th>
                             <th>Motivo</th>
                             <th>Responsable</th>
@@ -85,7 +86,16 @@
                             <td>{{ mov.fecha_movimiento }}</td>
                             <td>{{ mov.marca }}</td>
                             <td>{{ mov.nombre_categoria }}</td>
-                            <td>{{ mov.cantidad_producto }}</td>
+                            <td>
+                                {% if mov.empresa %}
+                                    <span class="proveedor-info" title="{{ mov.nombre_proveedor }}">
+                                        {{ mov.empresa }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Sin asignar</span>
+                                {% endif %}
+                            </td>
+                            <td><strong>{{ mov.cantidad_producto }}</strong></td>
                             <td>
                                 <span class="badge badge-{{ mov.motivo.lower().replace(' ', '-') }}">
                                     {{ mov.motivo }}
@@ -113,14 +123,31 @@
             <form method="POST" class="movimientos-form">
                 <div class="form-group">
                     <label for="id_producto">Producto Pendiente *</label>
-                    <select id="id_producto" name="id_producto" required>
+                    <select id="id_producto" name="id_producto" required onchange="actualizarProveedor()">
                         <option value="">-- Seleccionar Producto --</option>
                         {% for prod in productos %}
-                        <option value="{{ prod.id_producto }}">
-                            {{ prod.marca }} - {{ prod.nombre_categoria }} (Pendiente: {{ prod.pendiente_asignar }})
+                        <option value="{{ prod.id_producto }}" 
+                                data-proveedor="{{ prod.id_proveedor }}"
+                                data-empresa="{{ prod.empresa }}"
+                                data-nombre-proveedor="{{ prod.nombre_proveedor }}">
+                            {{ prod.marca }} - {{ prod.nombre_categoria }} | 
+                            Cliente: {{ prod.empresa }} (Pendiente: {{ prod.pendiente_asignar }})
                         </option>
                         {% endfor %}
                     </select>
+                </div>
+
+                <input type="hidden" id="id_proveedor" name="id_proveedor">
+
+                <div class="proveedor-info-box" id="proveedor-info" style="display: none;">
+                    <div class="info-item">
+                        <span class="info-label">🏢 Cliente/Empresa:</span>
+                        <span class="info-value" id="empresa-text">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">👤 Contacto:</span>
+                        <span class="info-value" id="proveedor-text">-</span>
+                    </div>
                 </div>
 
                 <div class="form-row">
@@ -129,7 +156,9 @@
                         <select id="id_almacen" name="id_almacen" required onchange="cargarEstantes()">
                             <option value="">-- Seleccionar Almacén --</option>
                             {% for almacen in almacenes %}
-                            <option value="{{ almacen.id_almacen }}">{{ almacen.nombre_almacen }}</option>
+                            <option value="{{ almacen.id_almacen }}">
+                                {{ almacen.nombre_almacen }} (Disponible: {{ almacen.disponible }})
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -165,7 +194,9 @@
                         <option value="">-- Seleccionar Producto --</option>
                         {% for inv in inventarios %}
                         <option value="{{ inv.id_inventario }}">
-                            {{ inv.marca }} - {{ inv.nombre_almacen }} / {{ inv.pasillo }} (Stock: {{ inv.stock_producto }})
+                            {{ inv.marca }} - {{ inv.nombre_almacen }} / {{ inv.pasillo }} | 
+                            {% if inv.empresa %}Cliente: {{ inv.empresa }}{% else %}Sin cliente{% endif %} 
+                            (Stock: {{ inv.stock_producto }})
                         </option>
                         {% endfor %}
                     </select>
@@ -213,7 +244,9 @@
                         <option value="">-- Seleccionar Producto --</option>
                         {% for inv in inventarios %}
                         <option value="{{ inv.id_inventario }}">
-                            {{ inv.marca }} - {{ inv.nombre_almacen }} / {{ inv.pasillo }} (Stock Actual: {{ inv.stock_producto }})
+                            {{ inv.marca }} - {{ inv.nombre_almacen }} / {{ inv.pasillo }} | 
+                            {% if inv.empresa %}Cliente: {{ inv.empresa }}{% else %}Sin cliente{% endif %} 
+                            (Stock: {{ inv.stock_producto }})
                         </option>
                         {% endfor %}
                     </select>
@@ -246,9 +279,47 @@
 </div>
 
 <script>
+function actualizarProveedor() {
+    const select = document.getElementById('id_producto');
+    const option = select.options[select.selectedIndex];
+    const proveedorId = option.getAttribute('data-proveedor');
+    const empresa = option.getAttribute('data-empresa');
+    const nombreProveedor = option.getAttribute('data-nombre-proveedor');
+    
+    document.getElementById('id_proveedor').value = proveedorId || '';
+    
+    const infoBox = document.getElementById('proveedor-info');
+    if (proveedorId) {
+        document.getElementById('empresa-text').textContent = empresa || '-';
+        document.getElementById('proveedor-text').textContent = nombreProveedor || '-';
+        infoBox.style.display = 'block';
+    } else {
+        infoBox.style.display = 'none';
+    }
+}
+
 function cargarEstantes() {
     const almacenId = document.getElementById('id_almacen').value;
     const estanteSelect = document.getElementById('id_estante');
+    
+    if (!almacenId) {
+        estanteSelect.innerHTML = '<option value="">-- Primero seleccione almacén --</option>';
+        return;
+    }
+    
+    fetch(`/movimientos/estantes/${almacenId}`)
+        .then(response => response.text())
+        .then(html => {
+            estanteSelect.innerHTML = html;
+        })
+        .catch(error => {
+            estanteSelect.innerHTML = '<option value="">Error al cargar estantes</option>';
+        });
+}
+
+function cargarEstantesDestino() {
+    const almacenId = document.getElementById('almacen_destino').value;
+    const estanteSelect = document.getElementById('id_estante_destino');
     
     if (!almacenId) {
         estanteSelect.innerHTML = '<option value="">-- Primero seleccione almacén --</option>';

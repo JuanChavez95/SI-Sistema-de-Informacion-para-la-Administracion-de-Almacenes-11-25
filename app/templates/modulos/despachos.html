@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+
+{% block title %}Despachos - Sistema{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-despachos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>📦 Gestión de Despachos</h1>
+    <p>Control de retiro de productos por empresas clientes</p>
+</div>
+
+{% if tab == 'lista' %}
+<!-- LISTA DE DESPACHOS -->
+<div class="despachos-actions">
+    <a href="{{ url_for('despachos.crear') }}" class="btn btn-primary">
+        ➕ Nuevo Despacho
+    </a>
+</div>
+
+<div class="despachos-grid">
+    {% for despacho in despachos %}
+    <div class="despacho-card estado-{{ despacho.estado|lower|replace(' ', '-') }}">
+        <div class="despacho-header">
+            <div>
+                <h3>{{ despacho.numero_guia }}</h3>
+                <p class="empresa">🏢 {{ despacho.empresa or despacho.nombre_proveedor }}</p>
+            </div>
+            <span class="badge estado-{{ despacho.estado|lower|replace(' ', '-') }}">
+                {{ despacho.estado }}
+            </span>
+        </div>
+        
+        <div class="despacho-info">
+            <div class="info-item">
+                <span class="label">📅 Solicitud:</span>
+                <span>{{ despacho.fecha_solicitud }}</span>
+            </div>
+            {% if despacho.fecha_despacho %}
+            <div class="info-item">
+                <span class="label">🚚 Despachado:</span>
+                <span>{{ despacho.fecha_despacho }}</span>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <span class="label">👤 Responsable:</span>
+                <span>{{ despacho.nombre }} {{ despacho.apellido_paterno }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">📦 Items:</span>
+                <span>{{ despacho.total_items }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">📊 Despachado:</span>
+                <span>{{ despacho.total_despachado or 0 }} / {{ despacho.total_solicitado }}</span>
+            </div>
+        </div>
+        
+        <div class="despacho-actions">
+            <a href="{{ url_for('despachos.detalle', id=despacho.id_pedido_despacho) }}" class="btn-action">
+                👁️ Ver Detalle
+            </a>
+            {% if despacho.estado == 'Pendiente' or despacho.estado == 'En Preparación' %}
+            <a href="{{ url_for('despachos.picking', id=despacho.id_pedido_despacho) }}" class="btn-action">
+                📋 Picking
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not despachos %}
+<div class="empty-state">
+    <p>📭 No hay despachos registrados</p>
+    <a href="{{ url_for('despachos.crear') }}" class="btn btn-primary">Crear Primer Despacho</a>
+</div>
+{% endif %}
+
+{% elif tab == 'crear' %}
+<!-- CREAR DESPACHO -->
+<div class="form-container">
+    <form method="POST" id="formCrearDespacho" onsubmit="return validarFormulario()">
+        <div class="form-section">
+            <h3>Información del Despacho</h3>
+            
+            <div class="form-group">
+                <label>🏢 Empresa Cliente *</label>
+                <select name="id_proveedor" id="id_proveedor" required>
+                    <option value="">-- Seleccionar Empresa --</option>
+                    {% for prov in proveedores %}
+                    <option value="{{ prov.id_proveedor }}">
+                        {{ prov.empresa or prov.nombre_proveedor }} - NIT: {{ prov.nit }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="form-help">Seleccione la empresa cliente que retirará productos</small>
+            </div>
+            
+            <div class="form-group">
+                <label>📝 Observaciones</label>
+                <textarea name="observaciones" rows="3" placeholder="Notas adicionales..."></textarea>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="section-header">
+                <h3>Productos a Despachar</h3>
+                <span id="productos-counter" class="counter">0 productos seleccionados</span>
+            </div>
+            <div id="productos-container" class="productos-container-state">
+                <div class="estado-inicial">
+                    <div class="icono-grande">📦</div>
+                    <p class="texto-principal">Seleccione una empresa para ver sus productos disponibles</p>
+                    <p class="texto-secundario">Los productos mostrados son los que la empresa tiene almacenados actualmente</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('despachos.index') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary" id="btnSubmit" disabled>Crear Despacho</button>
+        </div>
+    </form>
+</div>
+
+{% elif tab == 'detalle' %}
+<!-- DETALLE DEL DESPACHO -->
+<div class="detalle-container">
+    <div class="detalle-header">
+        <div>
+            <h2>{{ despacho.numero_guia }}</h2>
+            <span class="badge estado-{{ despacho.estado|lower|replace(' ', '-') }}">
+                {{ despacho.estado }}
+            </span>
+        </div>
+        <div class="detalle-actions">
+            {% if despacho.estado == 'Pendiente' %}
+            <a href="{{ url_for('despachos.editar', id=despacho.id_pedido_despacho) }}" class="btn btn-secondary">
+                ✏️ Editar
+            </a>
+            <a href="{{ url_for('despachos.picking', id=despacho.id_pedido_despacho) }}" class="btn btn-primary">
+                📋 Iniciar Picking
+            </a>
+            <form method="POST" action="{{ url_for('despachos.cancelar', id=despacho.id_pedido_despacho) }}" style="display: inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Cancelar este despacho?')">
+                    ❌ Cancelar
+                </button>
+            </form>
+            {% elif despacho.estado == 'En Preparación' %}
+            <a href="{{ url_for('despachos.picking', id=despacho.id_pedido_despacho) }}" class="btn btn-primary">
+                📋 Continuar Picking
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="info-grid">
+        <div class="info-card">
+            <h4>🏢 Empresa Cliente</h4>
+            <p><strong>{{ despacho.empresa or despacho.nombre_proveedor }}</strong></p>
+            <p>📞 {{ despacho.telefono }}</p>
+            <p>📍 {{ despacho.direccion }}</p>
+        </div>
+        
+        <div class="info-card">
+            <h4>👤 Responsable</h4>
+            <p><strong>{{ despacho.nombre }} {{ despacho.apellido_paterno }}</strong></p>
+            <p>📧 {{ despacho.email }}</p>
+        </div>
+        
+        <div class="info-card">
+            <h4>📅 Fechas</h4>
+            <p><strong>Solicitud:</strong> {{ despacho.fecha_solicitud }}</p>
+            {% if despacho.fecha_despacho %}
+            <p><strong>Despacho:</strong> {{ despacho.fecha_despacho }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if despacho.observaciones %}
+    <div class="observaciones-box">
+        <h4>📝 Observaciones</h4>
+        <p>{{ despacho.observaciones }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="table-container">
+        <h3>Productos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Ubicación</th>
+                    <th>Stock</th>
+                    <th>Solicitado</th>
+                    <th>Despachado</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for det in detalles %}
+                <tr>
+                    <td>{{ det.marca }}</td>
+                    <td>{{ det.nombre_categoria }}</td>
+                    <td>{{ det.nombre_almacen }} - {{ det.pasillo }}</td>
+                    <td>{{ det.stock_producto or 'N/A' }}</td>
+                    <td>{{ det.cantidad_solicitada }}</td>
+                    <td>{{ det.cantidad_despachada }}</td>
+                    <td>
+                        {% if det.cantidad_despachada >= det.cantidad_solicitada %}
+                        <span class="badge estado-despachado">✅ Completo</span>
+                        {% elif det.cantidad_despachada > 0 %}
+                        <span class="badge estado-en-preparacion">⚠️ Parcial</span>
+                        {% else %}
+                        <span class="badge estado-pendiente">⏳ Pendiente</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% elif tab == 'picking' %}
+<!-- VISTA DE PICKING -->
+<div class="picking-container">
+    <div class="picking-header">
+        <h2>📋 Preparación de Despacho: {{ despacho.numero_guia }}</h2>
+        <p>🏢 {{ despacho.empresa or despacho.nombre_proveedor }}</p>
+    </div>
+    
+    <form method="POST" action="{{ url_for('despachos.confirmar', id=despacho.id_pedido_despacho) }}" id="formPicking">
+        <div class="picking-list">
+            {% for det in detalles %}
+            <div class="picking-item">
+                <div class="producto-info">
+                    <h4>{{ det.marca }}</h4>
+                    <p class="categoria">{{ det.nombre_categoria }}</p>
+                    <p class="ubicacion">📍 {{ det.nombre_almacen }} - Estante {{ det.pasillo }}</p>
+                </div>
+                
+                <div class="cantidad-info">
+                    <div class="stock-disponible">
+                        <span class="label">Stock:</span>
+                        <span class="valor">{{ det.stock_producto }}</span>
+                    </div>
+                    <div class="cantidad-solicitada">
+                        <span class="label">Solicitado:</span>
+                        <span class="valor">{{ det.cantidad_solicitada }}</span>
+                    </div>
+                </div>
+                
+                <div class="cantidad-picker">
+                    <label>Cantidad a Despachar:</label>
+                    <input type="hidden" name="ids_detalle[]" value="{{ det.id_detalle_despacho }}">
+                    <input type="number" 
+                           name="cantidades_despachadas[]" 
+                           min="0" 
+                           max="{{ [det.stock_producto, det.cantidad_solicitada]|min }}"
+                           value="{{ [det.stock_producto, det.cantidad_solicitada]|min }}"
+                           required>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('despachos.detalle', id=despacho.id_pedido_despacho) }}" class="btn btn-secondary">
+                Volver
+            </a>
+            <button type="submit" class="btn btn-primary" onclick="return confirm('¿Confirmar despacho? Esta acción actualizará el inventario.')">
+                ✅ Confirmar Despacho
+            </button>
+        </div>
+    </form>
+</div>
+
+{% elif tab == 'editar' %}
+<!-- EDITAR DESPACHO -->
+<div class="form-container">
+    <h2>✏️ Editar Despacho: {{ despacho.numero_guia }}</h2>
+    <p class="text-muted">🏢 {{ despacho.nombre_proveedor }}</p>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label>📝 Observaciones</label>
+            <textarea name="observaciones" rows="4">{{ despacho.observaciones }}</textarea>
+        </div>
+        
+        <div class="table-container">
+            <h3>Productos</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Cantidad Solicitada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for det in detalles %}
+                    <tr>
+                        <td>{{ det.marca }}</td>
+                        <td>{{ det.nombre_categoria }}</td>
+                        <td>{{ det.cantidad_solicitada }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('despachos.detalle', id=despacho.id_pedido_despacho) }}" class="btn btn-secondary">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+    </form>
+</div>
+
+{% elif tab == 'historial' %}
+<!-- HISTORIAL POR EMPRESA -->
+<div class="historial-container">
+    <div class="historial-header">
+        <h2>📊 Historial de Despachos</h2>
+        <div class="empresa-info">
+            <h3>🏢 {{ proveedor.empresa or proveedor.nombre_proveedor }}</h3>
+            <p>NIT: {{ proveedor.nit }} | 📞 {{ proveedor.telefono }}</p>
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>N° Guía</th>
+                    <th>Fecha Solicitud</th>
+                    <th>Fecha Despacho</th>
+                    <th>Items</th>
+                    <th>Total Despachado</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for desp in despachos %}
+                <tr>
+                    <td>{{ desp.numero_guia }}</td>
+                    <td>{{ desp.fecha_solicitud }}</td>
+                    <td>{{ desp.fecha_despacho or '-' }}</td>
+                    <td>{{ desp.total_items }}</td>
+                    <td>{{ desp.total_despachado or 0 }}</td>
+                    <td>
+                        <span class="badge estado-{{ desp.estado|lower|replace(' ', '-') }}">
+                            {{ desp.estado }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('despachos.detalle', id=desp.id_pedido_despacho) }}" class="btn-action">
+                            Ver
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+console.log('Script cargado');
+var productosSeleccionados = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    var selectProveedor = document.getElementById('id_proveedor');
+    var productosContainer = document.getElementById('productos-container');
+    var btnSubmit = document.getElementById('btnSubmit');
+    var counter = document.getElementById('productos-counter');
+    
+    if (selectProveedor) {
+        selectProveedor.addEventListener('change', function() {
+            var idProveedor = this.value;
+            console.log('Proveedor:', idProveedor);
+            
+            if (!idProveedor) {
+                productosContainer.innerHTML = '<div class="estado-inicial"><div class="icono-grande">📦</div><p class="texto-principal">Seleccione una empresa para ver sus productos disponibles</p></div>';
+                btnSubmit.disabled = true;
+                return;
+            }
+            
+            productosContainer.innerHTML = '<div class="estado-cargando"><div class="spinner"></div><p>Cargando productos disponibles...</p></div>';
+            
+            fetch('/despachos/productos/' + idProveedor)
+                .then(function(response) {
+                    console.log('Respuesta:', response.status);
+                    return response.json();
+                })
+                .then(function(data) {
+                    console.log('Datos:', data);
+                    if (data.success && data.productos.length > 0) {
+                        var html = '<div class="productos-lista">';
+                        for (var i = 0; i < data.productos.length; i++) {
+                            var prod = data.productos[i];
+                            html += '<div class="producto-item"><div class="producto-checkbox"><input type="checkbox" id="check-' + i + '" name="productos[]" value="' + prod.id_producto + '" onchange="toggleProducto(' + i + ')"></div><div class="producto-detalle"><label for="check-' + i + '"><strong>' + prod.marca + '</strong></label><p>' + prod.nombre_categoria + '</p><p>📍 ' + prod.nombre_almacen + ' - ' + prod.pasillo + '</p></div><div class="producto-stock"><span class="stock-badge">Stock: ' + prod.stock_producto + '</span></div><div class="producto-cantidad" id="cantidad-' + i + '" style="display:none;"><input type="hidden" name="inventarios[]" value="' + prod.id_inventario + '" disabled><label>Cantidad:</label><input type="number" name="cantidades[]" id="input-' + i + '" min="1" max="' + prod.stock_producto + '" value="1" disabled class="input-cantidad"></div></div>';
+                        }
+                        html += '</div>';
+                        productosContainer.innerHTML = html;
+                    } else {
+                        productosContainer.innerHTML = '<div class="estado-vacio"><div class="icono-grande">📭</div><p class="texto-principal">No hay productos disponibles</p></div>';
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    productosContainer.innerHTML = '<div class="estado-error"><div class="icono-grande">⚠️</div><p class="texto-principal">Error al cargar productos</p></div>';
+                });
+        });
+    }
+});
+
+function toggleProducto(index) {
+    var checkbox = document.getElementById('check-' + index);
+    var cantidadDiv = document.getElementById('cantidad-' + index);
+    var inputCantidad = document.getElementById('input-' + index);
+    var hiddenInput = cantidadDiv.querySelector('input[type="hidden"]');
+    var btnSubmit = document.getElementById('btnSubmit');
+    var counter = document.getElementById('productos-counter');
+    
+    if (checkbox.checked) {
+        cantidadDiv.style.display = 'flex';
+        inputCantidad.disabled = false;
+        hiddenInput.disabled = false;
+        productosSeleccionados++;
+    } else {
+        cantidadDiv.style.display = 'none';
+        inputCantidad.disabled = true;
+        hiddenInput.disabled = true;
+        productosSeleccionados--;
+    }
+    
+    counter.textContent = productosSeleccionados + ' producto' + (productosSeleccionados !== 1 ? 's' : '') + ' seleccionado' + (productosSeleccionados !== 1 ? 's' : '');
+    btnSubmit.disabled = productosSeleccionados === 0;
+}
+
+function validarFormulario() {
+    if (!document.getElementById('id_proveedor').value) {
+        alert('⚠️ Debe seleccionar una empresa cliente');
+        return false;
+    }
+    if (productosSeleccionados === 0) {
+        alert('⚠️ Debe seleccionar al menos un producto para despachar');
+        return false;
+    }
+    var inputs = document.querySelectorAll('.input-cantidad:not([disabled])');
+    for (var i = 0; i < inputs.length; i++) {
+        var valor = parseInt(inputs[i].value);
+        var max = parseInt(inputs[i].max);
+        if (valor <= 0 || valor > max) {
+            alert('⚠️ La cantidad debe estar entre 1 y ' + max);
+            inputs[i].focus();
+            return false;
+        }
+    }
+    return confirm('¿Está seguro de crear este despacho?');
+}
+</script>
+{% endblock %}

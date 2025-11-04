@@ -292,3 +292,397 @@
 .form-section {
     animation: fadeIn 0.3s ease;
 }
+
+/* ========================================
+   ESTILOS DEL MÓDULO DE MOVIMIENTOS
+   ======================================== */
+
+/* SECCIONES */
+.movimientos-section,
+.form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--gris-claro);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: var(--negro);
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.form-subtitle {
+    color: var(--gris-oscuro);
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+/* TABLA */
+.movimientos-table {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.movimientos-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+
+.movimientos-table table thead {
+    background: linear-gradient(135deg, var(--morado-light) 0%, var(--morado) 100%);
+    color: white;
+}
+
+.movimientos-table table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+}
+
+.movimientos-table table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    color: var(--negro);
+    vertical-align: middle;
+}
+
+.movimientos-table table tbody td:last-child {
+    border-right: none;
+}
+
+.movimientos-table table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.movimientos-table table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.movimientos-table table tbody tr td:first-child {
+    font-weight: 700;
+    color: var(--morado);
+}
+
+/* INFORMACIÓN DE PROVEEDOR EN TABLA */
+.proveedor-info {
+    display: inline-block;
+    font-weight: 600;
+    color: #2563eb;
+    cursor: help;
+}
+
+.text-muted {
+    color: var(--gris-oscuro);
+    font-style: italic;
+    font-size: 13px;
+}
+
+/* CAJA DE INFORMACIÓN DEL PROVEEDOR */
+.proveedor-info-box {
+    background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+    border-left: 4px solid #7c3aed;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: none;
+    animation: slideDown 0.3s ease;
+}
+
+.proveedor-info-box .info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.proveedor-info-box .info-item:last-child {
+    margin-bottom: 0;
+}
+
+.proveedor-info-box .info-label {
+    font-weight: 700;
+    color: #4c1d95;
+    min-width: 150px;
+    font-size: 14px;
+}
+
+.proveedor-info-box .info-value {
+    color: #1e1b4b;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* BADGES */
+.badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-ingreso-inicial {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-traslado {
+    background: #dbeafe;
+    color: #0c4a6e;
+}
+
+.badge-ajuste,
+.badge-merma,
+.badge-daño,
+.badge-corrección {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-salida {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* FORMULARIOS */
+.movimientos-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--negro);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px 16px;
+    border: 2px solid var(--gris-claro);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--morado);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.form-group select option[data-proveedor] {
+    padding: 10px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.form-actions .btn {
+    flex: 1;
+}
+
+/* BOTONES */
+.btn-secondary {
+    background: var(--gris-oscuro);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background: var(--negro);
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+}
+
+/* ESTADO VACÍO */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--gris);
+    border-radius: 8px;
+}
+
+.empty-state p {
+    color: var(--gris-oscuro);
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* TOOLTIPS */
+[title] {
+    position: relative;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .movimientos-table {
+        border-radius: 0;
+        margin: 0 -24px;
+        width: calc(100% + 48px);
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    table th,
+    table td {
+        padding: 10px 8px;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .proveedor-info-box {
+        padding: 12px 16px;
+    }
+
+    .proveedor-info-box .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .proveedor-info-box .info-label {
+        min-width: auto;
+        font-size: 13px;
+    }
+
+    .proveedor-info-box .info-value {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .movimientos-section,
+    .form-section {
+        padding: 16px;
+    }
+
+    table {
+        font-size: 11px;
+    }
+
+    table th,
+    table td {
+        padding: 8px 6px;
+    }
+}
+
+/* ANIMACIONES */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.movimientos-section,
+.form-section {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ESTILOS PARA SELECTS CON INFORMACIÓN ADICIONAL */
+.form-group select option {
+    padding: 8px;
+    line-height: 1.5;
+}
+
+/* HIGHLIGHT PARA CAMPOS CON PROVEEDOR */
+.form-group select:has(option[data-proveedor]:checked) {
+    border-color: #7c3aed;
+}
