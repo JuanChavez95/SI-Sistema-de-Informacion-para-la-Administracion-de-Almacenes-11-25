@@ -2,13 +2,16 @@
 
 {% block title %}Dashboard - Auxiliar{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-dashboard.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo">
-                <!-- Placeholder para el logo -->
                 <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
                     alt="Grupo Forno" 
                     style="width: 150px; height: 75px; object-fit: contain;">
@@ -20,7 +23,7 @@
             <div class="user-avatar">{{ session.user_name[0] }}</div>
             <div class="user-details">
                 <p class="user-name">{{ session.user_name }}</p>
-                <p class="user-role">{{ user_role }}</p>
+                <p class="user-role">Auxiliar</p> 
             </div>
         </div>
         
@@ -41,50 +44,58 @@
     <!-- Main Content -->
     <main class="main-content">
         <header class="content-header">
-            <h1>Dashboard de Auxiliar Operativo</h1>
-            <p>Tareas diarias de registro de entradas y salidas de mercancía (WMS).</p>
+            <h1>Dashboard de Auxiliar</h1>
+            <p>Gestión operativa de inventario y recepciones.</p>
         </header>
         
-        <!-- Dashboard Stats - Datos de ejemplo (pendientes de la BD) -->
+        <!-- Dashboard Stats -->
         <section class="dashboard-stats">
+            <div class="stat-card morado">
+                <div class="stat-icon">📦</div>
+                <div class="stat-info">
+                    <h3>{{ stats.productos_unicos }}</h3>
+                    <p>Productos Únicos</p>
+                </div>
+            </div>
+            
             <div class="stat-card morado">
                 <div class="stat-icon">📥</div>
                 <div class="stat-info">
-                    <h3>---</h3>
-                    <p>Tareas de Recepción Hoy</p>
-                </div>
-            </div>
-            
-            <div class="stat-card negro">
-                <div class="stat-icon">📤</div>
-                <div class="stat-info">
-                    <h3>---</h3>
-                    <p>Tareas de Despacho Hoy</p>
+                    <h3>{{ stats.recepciones_pendientes }}</h3>
+                    <p>Recepciones Pendientes</p>
                 </div>
             </div>
             
             <div class="stat-card morado">
-                <div class="stat-icon">📊</div>
-                <div class="stat-info">
-                    <h3>---</h3>
-                    <p>Productos con Stock Mínimo</p>
-                </div>
-            </div>
-            
-            <div class="stat-card negro">
                 <div class="stat-icon">🔄</div>
                 <div class="stat-info">
-                    <h3>---</h3>
-                    <p>Traslados Pendientes</p>
+                    <h3>{{ stats.movimientos_hoy }}</h3>
+                    <p>Movimientos Hoy</p>
                 </div>
             </div>
         </section>
         
-        <!-- Módulos del Sistema (Limitado a Recepciones, Despachos, Inventario, Movimientos) -->
+        <!-- Alertas y Notificaciones -->
+        {% if alertas %}
+        <section class="alertas-section">
+            <h2>⚠️ Alertas y Notificaciones</h2>
+            <div class="alertas-grid">
+                {% for alerta in alertas %}
+                <div class="alerta-card {{ alerta.tipo }}">
+                    <span class="alerta-icon">{{ alerta.icono }}</span>
+                    <p>{{ alerta.mensaje }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        
+        <!-- Módulos del Sistema -->
         <section class="modulos-section">
-            <h2>Módulos de Operación Diaria (C/R/U)</h2>
+            <h2>Módulos con Permisos</h2>
             <div class="modulos-grid">
                 {% for modulo in modulos %}
+                {% if modulo.nombre in ['Inventario', 'Recepciones', 'Despachos'] %}
                 <a href="{{ modulo.url_final }}" class="modulo-card {{ modulo.color }}">
                     <div class="modulo-icon">{{ modulo.icono }}</div>
                     <div class="modulo-info">
@@ -92,9 +103,13 @@
                         <p>{{ modulo.descripcion }}</p>
                     </div>
                 </a>
+                {% endif %}
                 {% endfor %}
             </div>
         </section>
     </main>
 </div>
+{% endblock %}
+
+{% block extra_js %}
 {% endblock %}

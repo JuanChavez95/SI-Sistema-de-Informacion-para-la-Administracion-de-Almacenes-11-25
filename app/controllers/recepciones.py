@@ -17,6 +17,8 @@ def get_db_connection():
 def index():
     """Listar todas las recepciones"""
     try:
+        user_role = session.get('user_role')
+        
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
@@ -34,6 +36,12 @@ def index():
         
         cursor.close()
         conn.close()
+        
+        # CAMBIO AQUÍ
+        if user_role == 'Auxiliar':
+            return render_template('auxiliar/recepciones_auxiliar.html',
+                                tab='lista',
+                                recepciones=recepciones)
         
         return render_template('modulos/recepciones.html',
                             tab='lista',

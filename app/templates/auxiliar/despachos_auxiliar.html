@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Despachos - Sistema{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-despachos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>📦 Gestión de Despachos</h1>
+    <p>Visualización de retiro de productos por empresas clientes</p>
+</div>
+
+{% if tab == 'lista' %}
+<!-- LISTA DE DESPACHOS (SOLO LECTURA) -->
+<div class="despachos-grid">
+    {% for despacho in despachos %}
+    <div class="despacho-card estado-{{ despacho.estado|lower|replace(' ', '-') }}">
+        <div class="despacho-header">
+            <div>
+                <h3>{{ despacho.numero_guia }}</h3>
+                <p class="empresa">🏢 {{ despacho.empresa or despacho.nombre_proveedor }}</p>
+            </div>
+            <span class="badge estado-{{ despacho.estado|lower|replace(' ', '-') }}">
+                {{ despacho.estado }}
+            </span>
+        </div>
+        
+        <div class="despacho-info">
+            <div class="info-item">
+                <span class="label">📅 Solicitud:</span>
+                <span>{{ despacho.fecha_solicitud }}</span>
+            </div>
+            {% if despacho.fecha_despacho %}
+            <div class="info-item">
+                <span class="label">🚚 Despachado:</span>
+                <span>{{ despacho.fecha_despacho }}</span>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <span class="label">👤 Responsable:</span>
+                <span>{{ despacho.nombre }} {{ despacho.apellido_paterno }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">📦 Items:</span>
+                <span>{{ despacho.total_items }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">📊 Despachado:</span>
+                <span>{{ despacho.total_despachado or 0 }} / {{ despacho.total_solicitado }}</span>
+            </div>
+        </div>
+        
+        <div class="despacho-actions">
+            <a href="{{ url_for('despachos.detalle', id=despacho.id_pedido_despacho) }}" class="btn-action">
+                👁️ Ver Detalle
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not despachos %}
+<div class="empty-state">
+    <p>📭 No hay despachos registrados</p>
+</div>
+{% endif %}
+
+{% elif tab == 'detalle' %}
+<!-- DETALLE DEL DESPACHO (SOLO LECTURA) -->
+<div class="detalle-container">
+    <div class="detalle-header">
+        <div>
+            <h2>{{ despacho.numero_guia }}</h2>
+            <span class="badge estado-{{ despacho.estado|lower|replace(' ', '-') }}">
+                {{ despacho.estado }}
+            </span>
+        </div>
+        <div class="detalle-actions">
+            <a href="{{ url_for('despachos.index') }}" class="btn btn-secondary">
+                ← Volver
+            </a>
+        </div>
+    </div>
+    
+    <div class="info-grid">
+        <div class="info-card">
+            <h4>🏢 Empresa Cliente</h4>
+            <p><strong>{{ despacho.empresa or despacho.nombre_proveedor }}</strong></p>
+            <p>📞 {{ despacho.telefono }}</p>
+            <p>📍 {{ despacho.direccion }}</p>
+        </div>
+        
+        <div class="info-card">
+            <h4>👤 Responsable</h4>
+            <p><strong>{{ despacho.nombre }} {{ despacho.apellido_paterno }}</strong></p>
+            <p>📧 {{ despacho.email }}</p>
+        </div>
+        
+        <div class="info-card">
+            <h4>📅 Fechas</h4>
+            <p><strong>Solicitud:</strong> {{ despacho.fecha_solicitud }}</p>
+            {% if despacho.fecha_despacho %}
+            <p><strong>Despacho:</strong> {{ despacho.fecha_despacho }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if despacho.observaciones %}
+    <div class="observaciones-box">
+        <h4>📝 Observaciones</h4>
+        <p>{{ despacho.observaciones }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="table-container">
+        <h3>Productos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Ubicación</th>
+                    <th>Stock</th>
+                    <th>Solicitado</th>
+                    <th>Despachado</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for det in detalles %}
+                <tr>
+                    <td>{{ det.marca }}</td>
+                    <td>{{ det.nombre_categoria }}</td>
+                    <td>{{ det.nombre_almacen }} - {{ det.pasillo }}</td>
+                    <td>{{ det.stock_producto or 'N/A' }}</td>
+                    <td>{{ det.cantidad_solicitada }}</td>
+                    <td>{{ det.cantidad_despachada }}</td>
+                    <td>
+                        {% if det.cantidad_despachada >= det.cantidad_solicitada %}
+                        <span class="badge estado-despachado">✅ Completo</span>
+                        {% elif det.cantidad_despachada > 0 %}
+                        <span class="badge estado-en-preparacion">⚠️ Parcial</span>
+                        {% else %}
+                        <span class="badge estado-pendiente">⏳ Pendiente</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

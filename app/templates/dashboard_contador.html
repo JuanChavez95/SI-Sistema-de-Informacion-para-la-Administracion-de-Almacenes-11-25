@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - Gerente{% endblock %}
+{% block title %}Dashboard - Contador{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-dashboard.css') }}">
+{% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
@@ -8,7 +12,6 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo">
-                <!-- Placeholder para el logo -->
                 <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" 
                     alt="Grupo Forno" 
                     style="width: 150px; height: 75px; object-fit: contain;">
@@ -20,7 +23,7 @@
             <div class="user-avatar">{{ session.user_name[0] }}</div>
             <div class="user-details">
                 <p class="user-name">{{ session.user_name }}</p>
-                <p class="user-role">{{ user_role }}</p>
+                <p class="user-role">Contador</p> 
             </div>
         </div>
         
@@ -41,50 +44,69 @@
     <!-- Main Content -->
     <main class="main-content">
         <header class="content-header">
-            <h1>Dashboard de Gerente</h1>
-            <p>Supervisión y coordinación de la gestión de almacenes y operaciones.</p>
+            <h1>Dashboard de Contador</h1>
+            <p>Análisis financiero y valuación de inventario.</p>
         </header>
         
-        <!-- Dashboard Stats - Datos de ejemplo (pendientes de la BD) -->
+        <!-- Dashboard Stats -->
         <section class="dashboard-stats">
-            <div class="stat-card morado">
-                <div class="stat-icon">📦</div>
-                <div class="stat-info">
-                    <h3>---</h3>
-                    <p>Nivel de Servicio (OTIF)</p>
-                </div>
-            </div>
-            
             <div class="stat-card negro">
-                <div class="stat-icon">🛒</div>
+                <div class="stat-icon">👥</div>
                 <div class="stat-info">
-                    <h3>---</h3>
-                    <p>Total Pedidos Pendientes</p>
+                    <h3>{{ stats.clientes_registrados }}</h3>
+                    <p>Clientes Registrados</p>
                 </div>
             </div>
             
             <div class="stat-card morado">
-                <div class="stat-icon">🏢</div>
+                <div class="stat-icon">🔄</div>
                 <div class="stat-info">
-                    <h3>---</h3>
-                    <p>Empresas Clientes</p>
-                </div>
-            </div>
-            
-            <div class="stat-card negro">
-                <div class="stat-icon">🏪</div>
-                <div class="stat-info">
-                    <h3>---</h3>
-                    <p>Capacidad Ocupada (%)</p>
+                    <h3>{{ stats.movimientos_hoy }}</h3>
+                    <p>Movimientos Hoy</p>
                 </div>
             </div>
         </section>
         
-        <!-- Módulos del Sistema (Acceso de Gerencia) -->
+        <!-- Alertas y Notificaciones -->
+        {% if alertas %}
+        <section class="alertas-section">
+            <h2>⚠️ Alertas y Notificaciones</h2>
+            <div class="alertas-grid">
+                {% for alerta in alertas %}
+                <div class="alerta-card {{ alerta.tipo }}">
+                    <span class="alerta-icon">{{ alerta.icono }}</span>
+                    <p>{{ alerta.mensaje }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        
+        <!-- Gráficos -->
+        <section class="dashboard-charts">
+            <!-- Fila 1: Gráfico grande -->
+            <div class="charts-row">
+                <div class="chart-card full-width">
+                    <h3>📊 Recepciones vs Despachos (Últimos 30 días)</h3>
+                    <canvas id="chartRecepcionesDespachos"></canvas>
+                </div>
+            </div>
+            
+            <!-- Fila 2: Gráfico de categorías -->
+            <div class="charts-row">
+                <div class="chart-card full-width">
+                    <h3>📦 Productos por Categoría</h3>
+                    <canvas id="chartProductosCategoria"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Módulos del Sistema -->
         <section class="modulos-section">
-            <h2>Módulos de Supervisión y Operación</h2>
+            <h2>Módulos del Sistema</h2>
             <div class="modulos-grid">
                 {% for modulo in modulos %}
+                {% if modulo.nombre in ['Reportes', 'Empresas', 'Inventario'] %}
                 <a href="{{ modulo.url_final }}" class="modulo-card {{ modulo.color }}">
                     <div class="modulo-icon">{{ modulo.icono }}</div>
                     <div class="modulo-info">
@@ -92,9 +114,23 @@
                         <p>{{ modulo.descripcion }}</p>
                     </div>
                 </a>
+                {% endif %}
                 {% endfor %}
             </div>
         </section>
     </main>
 </div>
+
+<!-- Datos para JavaScript (sin mostrar en pantalla) -->
+<script id="dashboard-data" type="application/json">
+{
+    "recepcionesDespachos": {{ recepciones_despachos | tojson }},
+    "productosCategoria": {{ productos_categoria | tojson }}
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard-charts.js') }}"></script>
 {% endblock %}

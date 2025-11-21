@@ -30,17 +30,18 @@ ALL_MODULES = {
 }
 
 # Mapeo de roles a los módulos que deben ver y la plantilla a usar.
+# Mapeo de roles a los módulos que deben ver y la plantilla a usar.
 ROLE_DASHBOARDS = {
     'Administrador': {
         'modulos_keys': ['Usuarios', 'Empresas', 'Almacenes', 'Productos', 'Inventario', 'Recepciones', 'Despachos', 'Movimientos', 'Reportes', 'Configuracion'],
         'template': 'dashboard_administrador.html'
     },
     'Contador': {
-        'modulos_keys': ['Reportes', 'Movimientos', 'Inventario', 'Despachos'],
+        'modulos_keys': ['Reportes', 'Empresas', 'Inventario'],
         'template': 'dashboard_contador.html'
     },
     'Gerente': {
-        'modulos_keys': ['Empresas', 'Almacenes', 'Productos', 'Inventario', 'Recepciones', 'Despachos', 'Movimientos', 'Reportes'],
+        'modulos_keys': ['Reportes', 'Inventario', 'Recepciones', 'Movimientos', 'Despachos'],
         'template': 'dashboard_gerente.html'
     },
     'Auxiliar': {
@@ -52,7 +53,7 @@ ROLE_DASHBOARDS = {
         'template': 'dashboard_personal_de_logistica.html'
     },
     'Cliente': {
-        'modulos_keys': ['Productos', 'Despachos'],
+        'modulos_keys': ['Inventario', 'Despachos'],
         'template': 'dashboard_cliente.html'
     }
 }

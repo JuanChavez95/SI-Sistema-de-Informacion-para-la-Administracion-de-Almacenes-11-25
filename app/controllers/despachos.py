@@ -17,6 +17,8 @@ def get_db_connection():
 def index():
     """1. Listar todos los despachos"""
     try:
+        user_role = session.get('user_role')
+        
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
@@ -37,6 +39,9 @@ def index():
         
         cursor.close()
         conn.close()
+        
+        if user_role == 'Auxiliar' or user_role == "Cliente":
+            return render_template('auxiliar/despachos_auxiliar.html', despachos=despachos, tab='lista')
         
         return render_template('modulos/despachos.html', despachos=despachos, tab='lista')
     except Exception as e:

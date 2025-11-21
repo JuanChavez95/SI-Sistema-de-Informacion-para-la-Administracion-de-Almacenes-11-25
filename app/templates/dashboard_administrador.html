@@ -23,7 +23,7 @@
             <div class="user-avatar">{{ session.user_name[0] }}</div>
             <div class="user-details">
                 <p class="user-name">{{ session.user_name }}</p>
-                <p class="user-role">{{ user_role }}</p> 
+                <p class="user-role">Administrador</p> 
             </div>
         </div>
         
@@ -106,43 +106,14 @@
         </section>
         {% endif %}
         
-        <!-- Gráficos -->
-        <section class="dashboard-charts">
-            <!-- Fila 1: Gráfico grande -->
-            <div class="charts-row">
-                <div class="chart-card full-width">
-                    <h3>📊 Recepciones vs Despachos (Últimos 30 días)</h3>
-                    <canvas id="chartRecepcionesDespachos"></canvas>
-                </div>
-            </div>
-            
-            <!-- Fila 2: Dos gráficos medianos -->
-            <div class="charts-row">
-                <div class="chart-card half-width">
-                    <h3>🏪 Distribución de Productos por Almacén</h3>
-                    <canvas id="chartDistribucionAlmacenes"></canvas>
-                </div>
-                
-                <div class="chart-card half-width">
-                    <h3>📏 Ocupación de Almacenes</h3>
-                    <canvas id="chartOcupacionAlmacenes"></canvas>
-                </div>
-            </div>
-            
-            <!-- Fila 3: Gráfico de categorías -->
-            <div class="charts-row">
-                <div class="chart-card full-width">
-                    <h3>📦 Productos por Categoría</h3>
-                    <canvas id="chartProductosCategoria"></canvas>
-                </div>
-            </div>
-        </section>
+
         
         <!-- Módulos del Sistema -->
         <section class="modulos-section">
-            <h2>Módulos con Permisos (Acceso Total)</h2>
+            <h2>Módulos del Sistema (Acceso Total)</h2>
             <div class="modulos-grid">
                 {% for modulo in modulos %}
+                {% if modulo.nombre not in ['Productos', 'Configuración'] %}
                 <a href="{{ modulo.url_final }}" class="modulo-card {{ modulo.color }}">
                     <div class="modulo-icon">{{ modulo.icono }}</div>
                     <div class="modulo-info">
@@ -150,24 +121,14 @@
                         <p>{{ modulo.descripcion }}</p>
                     </div>
                 </a>
+                {% endif %}
                 {% endfor %}
             </div>
         </section>
     </main>
 </div>
 
-<!-- Datos para JavaScript (sin mostrar en pantalla) -->
-<script id="dashboard-data" type="application/json">
-{
-    "recepcionesDespachos": {{ recepciones_despachos | tojson }},
-    "distribucionAlmacenes": {{ distribucion_almacenes | tojson }},
-    "ocupacionAlmacenes": {{ ocupacion_almacenes | tojson }},
-    "productosCategoria": {{ productos_categoria | tojson }}
-}
-</script>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="{{ url_for('static', filename='js/dashboard-charts.js') }}"></script>
 {% endblock %}
