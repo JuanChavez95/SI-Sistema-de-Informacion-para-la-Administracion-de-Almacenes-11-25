@@ -58,21 +58,19 @@ def asignar():
         cursor = conn.cursor(dictionary=True)
         
         if request.method == 'GET':
-            # Obtener productos de recepciones con su proveedor
+            # Obtener productos de recepciones con estado 'Recibido' - SIN agrupar por proveedor
             cursor.execute("""
-                SELECT DISTINCT p.id_producto, p.marca, cat.nombre_categoria,
-                    ped.id_proveedor, prov.nombre_proveedor, prov.empresa,
-                    SUM(di.cantidad) as cantidad_recibida,
-                    COALESCE(SUM(inv.stock_producto), 0) as cantidad_inventario,
-                    (SUM(di.cantidad) - COALESCE(SUM(inv.stock_producto), 0)) as pendiente_asignar
+                SELECT di.id_detalle_ingreso, p.id_producto, p.marca, cat.nombre_categoria,
+                    ped.id_pedido, ped.id_proveedor, prov.nombre_proveedor, prov.empresa,
+                    di.cantidad as cantidad_recibida,
+                    ped.estado
                 FROM Detalle_Ingreso di
                 INNER JOIN Producto p ON di.id_producto = p.id_producto
                 INNER JOIN Categoria_Producto cat ON p.id_categoria_producto = cat.id_categoria_producto
                 INNER JOIN Pedido ped ON di.id_pedido = ped.id_pedido
                 INNER JOIN Proveedor prov ON ped.id_proveedor = prov.id_proveedor
-                LEFT JOIN Inventario inv ON p.id_producto = inv.id_producto AND inv.id_proveedor = prov.id_proveedor
-                GROUP BY p.id_producto, ped.id_proveedor
-                HAVING pendiente_asignar > 0
+                WHERE ped.estado = 'Recibido'
+                ORDER BY prov.nombre_proveedor, p.marca, di.id_detalle_ingreso
             """)
             productos_pendientes = cursor.fetchall()
             
@@ -94,16 +92,38 @@ def asignar():
                                 almacenes=almacenes)
         
         # POST - Asignar producto
-        id_producto = request.form.get('id_producto')
+        id_detalle_ingreso = request.form.get('id_detalle_ingreso')
+        id_pedido = request.form.get('id_pedido')
         id_proveedor = request.form.get('id_proveedor')
         id_estante = request.form.get('id_estante')
         cantidad = request.form.get('cantidad')
         
-        if not all([id_producto, id_proveedor, id_estante, cantidad]):
+        if not all([id_detalle_ingreso, id_pedido, id_proveedor, id_estante, cantidad]):
             flash('Todos los campos son obligatorios', 'warning')
             return redirect(url_for('movimientos.asignar'))
         
         cantidad = int(cantidad)
+        
+        # Obtener información del detalle de ingreso
+        cursor.execute("""
+            SELECT di.id_detalle_ingreso, di.id_producto, di.cantidad, ped.estado
+            FROM Detalle_Ingreso di
+            INNER JOIN Pedido ped ON di.id_pedido = ped.id_pedido
+            WHERE di.id_detalle_ingreso = %s
+        """, (id_detalle_ingreso,))
+        detalle = cursor.fetchone()
+        
+        if not detalle or detalle['estado'] != 'Recibido':
+            flash('El pedido no está en estado Recibido', 'warning')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('movimientos.asignar'))
+        
+        if cantidad > detalle['cantidad']:
+            flash('La cantidad solicitada supera la cantidad recibida', 'warning')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('movimientos.asignar'))
         
         # Verificar capacidad del estante
         cursor.execute("SELECT capacidad, capacidad_ocupada FROM Estante WHERE id_estante = %s", (id_estante,))
@@ -115,12 +135,12 @@ def asignar():
             conn.close()
             return redirect(url_for('movimientos.asignar'))
         
-        # Verificar si ya existe inventario en ese estante para ese producto y proveedor
+        # Verificar si ya existe inventario para ese producto, estante y proveedor
         cursor.execute("""
             SELECT id_inventario, stock_producto 
             FROM Inventario 
             WHERE id_producto = %s AND id_estante = %s AND id_proveedor = %s
-        """, (id_producto, id_estante, id_proveedor))
+        """, (detalle['id_producto'], id_estante, id_proveedor))
         inventario_existe = cursor.fetchone()
         
         if inventario_existe:
@@ -132,11 +152,11 @@ def asignar():
                 WHERE id_inventario = %s
             """, (nuevo_stock, datetime.now().date(), inventario_existe['id_inventario']))
         else:
-            # Crear nuevo registro de inventario con proveedor
+            # Crear nuevo registro de inventario
             cursor.execute("""
-                INSERT INTO Inventario (stock_producto, fecha_modificacion, id_estante, id_producto, id_proveedor)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (cantidad, datetime.now().date(), id_estante, id_producto, id_proveedor))
+                INSERT INTO Inventario (stock_producto, fecha_modificacion, id_estante, id_producto, id_proveedor, estado)
+                VALUES (%s, %s, %s, %s, %s, 'Disponible')
+            """, (cantidad, datetime.now().date(), id_estante, detalle['id_producto'], id_proveedor))
         
         # Actualizar capacidad ocupada del estante
         cursor.execute("""
@@ -157,7 +177,14 @@ def asignar():
         cursor.execute("""
             INSERT INTO Movimiento_Producto (cantidad_producto, motivo, fecha_movimiento, id_persona, id_producto)
             VALUES (%s, %s, %s, %s, %s)
-        """, (cantidad, 'Ingreso Inicial', datetime.now().date(), session.get('user_id'), id_producto))
+        """, (cantidad, 'Ingreso Inicial', datetime.now().date(), session.get('user_id'), detalle['id_producto']))
+        
+        # Cambiar estado del pedido a 'Asignado'
+        cursor.execute("""
+            UPDATE Pedido
+            SET estado = 'Asignado'
+            WHERE id_pedido = %s
+        """, (id_pedido,))
         
         conn.commit()
         cursor.close()
@@ -265,10 +292,10 @@ def trasladar():
             UPDATE Almacen a
             INNER JOIN Estante e ON a.id_almacen = e.id_almacen
             SET a.capacidad_ocupada = a.capacidad_ocupada - %s
-            WHERE e.id_estante = %s
+            WHERE e.id_almacen = (SELECT id_almacen FROM Estante WHERE id_estante = %s)
         """, (cantidad, inv_origen['id_estante']))
         
-        # Agregar stock en destino (manteniendo el mismo proveedor)
+        # Agregar stock en destino
         cursor.execute("""
             SELECT id_inventario, stock_producto 
             FROM Inventario 
@@ -284,8 +311,8 @@ def trasladar():
             """, (cantidad, datetime.now().date(), inv_destino['id_inventario']))
         else:
             cursor.execute("""
-                INSERT INTO Inventario (stock_producto, fecha_modificacion, id_estante, id_producto, id_proveedor)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO Inventario (stock_producto, fecha_modificacion, id_estante, id_producto, id_proveedor, estado)
+                VALUES (%s, %s, %s, %s, %s, 'Disponible')
             """, (cantidad, datetime.now().date(), id_estante_destino, inv_origen['id_producto'], inv_origen['id_proveedor']))
         
         # Actualizar capacidad estante destino
@@ -300,7 +327,7 @@ def trasladar():
             UPDATE Almacen a
             INNER JOIN Estante e ON a.id_almacen = e.id_almacen
             SET a.capacidad_ocupada = a.capacidad_ocupada + %s
-            WHERE e.id_estante = %s
+            WHERE e.id_almacen = (SELECT id_almacen FROM Estante WHERE id_estante = %s)
         """, (cantidad, id_estante_destino))
         
         # Registrar movimiento
@@ -453,12 +480,12 @@ def obtener_info_proveedor(id_producto, id_proveedor):
         
         cursor.execute("""
             SELECT prov.nombre_proveedor, prov.empresa,
-                SUM(di.cantidad) - COALESCE(SUM(inv.stock_producto), 0) as pendiente
+                COALESCE(SUM(di.cantidad), 0) as total_recibido,
+                COALESCE(SUM(CASE WHEN ped.estado = 'Asignado' THEN di.cantidad ELSE 0 END), 0) as cantidad_asignada
             FROM Proveedor prov
             INNER JOIN Pedido ped ON prov.id_proveedor = ped.id_proveedor
             INNER JOIN Detalle_Ingreso di ON ped.id_pedido = di.id_pedido
-            LEFT JOIN Inventario inv ON di.id_producto = inv.id_producto AND inv.id_proveedor = prov.id_proveedor
-            WHERE prov.id_proveedor = %s AND di.id_producto = %s
+            WHERE prov.id_proveedor = %s AND di.id_producto = %s AND ped.estado IN ('Recibido', 'Asignado')
             GROUP BY prov.id_proveedor
         """, (id_proveedor, id_producto))
         info = cursor.fetchone()
@@ -467,11 +494,12 @@ def obtener_info_proveedor(id_producto, id_proveedor):
         conn.close()
         
         if info:
+            pendiente = info['total_recibido'] - info['cantidad_asignada']
             return {
                 'success': True,
                 'nombre': info['nombre_proveedor'],
                 'empresa': info['empresa'],
-                'pendiente': info['pendiente']
+                'pendiente': pendiente
             }
         return {'success': False}
     except Exception as e:

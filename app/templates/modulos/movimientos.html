@@ -122,31 +122,40 @@
             
             <form method="POST" class="movimientos-form">
                 <div class="form-group">
-                    <label for="id_producto">Producto Pendiente *</label>
-                    <select id="id_producto" name="id_producto" required onchange="actualizarProveedor()">
+                    <label for="id_detalle_ingreso">Producto Pendiente *</label>
+                    <select id="id_detalle_ingreso" name="id_detalle_ingreso" required onchange="actualizarProveedor()">
                         <option value="">-- Seleccionar Producto --</option>
                         {% for prod in productos %}
-                        <option value="{{ prod.id_producto }}" 
+                        <option value="{{ prod.id_detalle_ingreso }}" 
+                                data-id-pedido="{{ prod.id_pedido }}"
+                                data-id-producto="{{ prod.id_producto }}"
                                 data-proveedor="{{ prod.id_proveedor }}"
                                 data-empresa="{{ prod.empresa }}"
-                                data-nombre-proveedor="{{ prod.nombre_proveedor }}">
+                                data-nombre-proveedor="{{ prod.nombre_proveedor }}"
+                                data-cantidad="{{ prod.cantidad_recibida }}">
                             {{ prod.marca }} - {{ prod.nombre_categoria }} | 
-                            Cliente: {{ prod.empresa }} (Pendiente: {{ prod.pendiente_asignar }})
+                            Proveedor: {{ prod.nombre_proveedor }} (Cantidad: {{ prod.cantidad_recibida }})
                         </option>
                         {% endfor %}
                     </select>
                 </div>
 
+                <input type="hidden" id="id_pedido" name="id_pedido">
+                <input type="hidden" id="id_producto" name="id_producto">
                 <input type="hidden" id="id_proveedor" name="id_proveedor">
 
                 <div class="proveedor-info-box" id="proveedor-info" style="display: none;">
                     <div class="info-item">
-                        <span class="info-label">🏢 Cliente/Empresa:</span>
+                        <span class="info-label">🏢 Proveedor/Empresa:</span>
                         <span class="info-value" id="empresa-text">-</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">👤 Contacto:</span>
                         <span class="info-value" id="proveedor-text">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📦 Cantidad Recibida:</span>
+                        <span class="info-value" id="cantidad-recibida-text">-</span>
                     </div>
                 </div>
 
@@ -169,8 +178,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="cantidad">Cantidad *</label>
-                        <input type="number" id="cantidad" name="cantidad" required min="1">
+                        <label for="cantidad">Cantidad a Asignar *</label>
+                        <input type="number" id="cantidad" name="cantidad" required min="1" placeholder="Máximo: (ver cantidad recibida)">
                     </div>
                 </div>
 
@@ -195,7 +204,7 @@
                         {% for inv in inventarios %}
                         <option value="{{ inv.id_inventario }}">
                             {{ inv.marca }} - {{ inv.nombre_almacen }} / {{ inv.pasillo }} | 
-                            {% if inv.empresa %}Cliente: {{ inv.empresa }}{% else %}Sin cliente{% endif %} 
+                            {% if inv.empresa %}Proveedor: {{ inv.empresa }}{% else %}Sin proveedor{% endif %} 
                             (Stock: {{ inv.stock_producto }})
                         </option>
                         {% endfor %}
@@ -245,7 +254,7 @@
                         {% for inv in inventarios %}
                         <option value="{{ inv.id_inventario }}">
                             {{ inv.marca }} - {{ inv.nombre_almacen }} / {{ inv.pasillo }} | 
-                            {% if inv.empresa %}Cliente: {{ inv.empresa }}{% else %}Sin cliente{% endif %} 
+                            {% if inv.empresa %}Proveedor: {{ inv.empresa }}{% else %}Sin proveedor{% endif %} 
                             (Stock: {{ inv.stock_producto }})
                         </option>
                         {% endfor %}
@@ -280,21 +289,31 @@
 
 <script>
 function actualizarProveedor() {
-    const select = document.getElementById('id_producto');
+    const select = document.getElementById('id_detalle_ingreso');
     const option = select.options[select.selectedIndex];
+    
+    const detalleId = option.value;
+    const pedidoId = option.getAttribute('data-id-pedido');
+    const productoId = option.getAttribute('data-id-producto');
     const proveedorId = option.getAttribute('data-proveedor');
     const empresa = option.getAttribute('data-empresa');
     const nombreProveedor = option.getAttribute('data-nombre-proveedor');
+    const cantidadRecibida = option.getAttribute('data-cantidad');
     
+    document.getElementById('id_pedido').value = pedidoId || '';
+    document.getElementById('id_producto').value = productoId || '';
     document.getElementById('id_proveedor').value = proveedorId || '';
     
     const infoBox = document.getElementById('proveedor-info');
-    if (proveedorId) {
+    if (detalleId) {
         document.getElementById('empresa-text').textContent = empresa || '-';
         document.getElementById('proveedor-text').textContent = nombreProveedor || '-';
+        document.getElementById('cantidad-recibida-text').textContent = cantidadRecibida || '-';
+        document.getElementById('cantidad').max = cantidadRecibida || '';
         infoBox.style.display = 'block';
     } else {
         infoBox.style.display = 'none';
+        document.getElementById('cantidad').max = '';
     }
 }
 
@@ -314,6 +333,7 @@ function cargarEstantes() {
         })
         .catch(error => {
             estanteSelect.innerHTML = '<option value="">Error al cargar estantes</option>';
+            console.error('Error:', error);
         });
 }
 
@@ -333,6 +353,7 @@ function cargarEstantesDestino() {
         })
         .catch(error => {
             estanteSelect.innerHTML = '<option value="">Error al cargar estantes</option>';
+            console.error('Error:', error);
         });
 }
 </script>

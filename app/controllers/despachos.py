@@ -243,11 +243,19 @@ def confirmar(id):
                 
                 # Reducir inventario
                 nuevo_stock = detalle['stock_producto'] - cantidad_despachada
+                
                 if nuevo_stock <= 0:
-                    cursor.execute("DELETE FROM Inventario WHERE id_inventario = %s", (detalle['id_inventario'],))
-                else:
+                    # Marcar como despachado en lugar de eliminar
                     cursor.execute("""
-                        UPDATE Inventario SET stock_producto = %s, fecha_modificacion = %s 
+                        UPDATE Inventario 
+                        SET stock_producto = 0, estado = 'Despachado', fecha_modificacion = %s 
+                        WHERE id_inventario = %s
+                    """, (datetime.now().date(), detalle['id_inventario']))
+                else:
+                    # Solo actualizar stock
+                    cursor.execute("""
+                        UPDATE Inventario 
+                        SET stock_producto = %s, fecha_modificacion = %s 
                         WHERE id_inventario = %s
                     """, (nuevo_stock, datetime.now().date(), detalle['id_inventario']))
                 
@@ -435,6 +443,7 @@ def productos_empresa(id_proveedor):
             INNER JOIN Almacen a ON e.id_almacen = a.id_almacen
             WHERE inv.id_proveedor = %s 
               AND inv.stock_producto > 0
+              AND inv.estado = 'Disponible'
             ORDER BY a.nombre_almacen, e.pasillo, p.marca
         """, (id_proveedor,))
         productos = cursor.fetchall()
