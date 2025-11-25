@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Reportes - Grupo Forno{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+    .reporte-card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .btn-generar { background: #4a90e2; border: none; }
+    .btn-generar:hover { background: #357abd; }
+    #resultado { animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='img/logo-forno-2.png') }}" alt="Grupo Forno" style="width: 150px;">
+            </div>
+            <h2>Grupo Forno</h2>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar">{{ session.user_name[0] }}</div>
+            <div class="user-details">
+                <p class="user-name">{{ session.user_name }}</p>
+                <p class="user-role">{{ session.user_role }}</p>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-item">
+                <span class="nav-icon">Dashboard</span>
+            </a>
+            <a href="{{ url_for('reportes.index') }}" class="nav-item active">
+                <span class="nav-icon">Reportes</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-logout">
+                <span>Logout</span> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="content-header">
+            <h1>Reportes y Estadísticas</h1>
+            <p>Genera informes personalizados con gráficos y exportación</p>
+        </header>
+
+        <section class="reporte-card card p-4 mb-4">
+            <form id="formFiltros" class="row g-3">
+                <div class="col-md-3">
+                    <label>Tipo de Reporte</label>
+                    <select class="form-select" id="tipo_reporte" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="ingreso">Ingresos</option>
+                        <option value="inventario">Inventario</option>
+                        <option value="despacho">Despachos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio">
+                </div>
+                <div class="col-md-3">
+                    <label>Fecha Fin</label>
+                    <input type="date" class="form-control" id="fecha_fin">
+                </div>
+                <div class="col-md-3">
+                    <label>Proveedor</label>
+                    <select class="form-select" id="proveedor_id">
+                        <option value="">Todos</option>
+                        {% for p in proveedores %}
+                        <option value="{{ p.id_proveedor }}">{{ p.nombre_proveedor }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Categoría</label>
+                    <select class="form-select" id="categoria_id">
+                        <option value="">Todas</option>
+                        {% for c in categorias %}
+                        <option value="{{ c.id_categoria_producto }}">{{ c.nombre_categoria }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Al
+
+amacén</label>
+                    <select class="form-select" id="almacen_id">
+                        <option value="">Todos</option>
+                        {% for a in almacenes %}
+                        <option value="{{ a.id_almacen }}">{{ a.nombre_almacen }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Estado</label>
+                    <select class="form-select" id="estado_despacho">
+                        <option value="">Todos</option>
+                        <option>Pendiente</option>
+                        <option>Despachado</option>
+                        <option>Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Responsable</label>
+                    <select class="form-select" id="responsable_id">
+                        <option value="">Todos</option>
+                        {% for r in responsables %}
+                        <option value="{{ r.id_persona }}">{{ r.nombre_completo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Gráfico</label>
+                    <select class="form-select" id="grafico_tipo">
+                        <option value="barras">Barras</option>
+                        <option value="torta">Torta</option>
+                    </select>
+                </div>
+                <div class="col-md-12 text-end">
+                    <button type="button" id="btnGenerar" class="btn btn-generar text-white">
+                        Generar Reporte
+                    </button>
+                    <button type="button" id="btnExcel" class="btn btn-success" disabled>Excel</button>
+                    <button type="button" id="btnPDF" class="btn btn-danger" disabled>PDF</button>
+                </div>
+            </form>
+        </section>
+
+        <div id="resultado" style="display: none;">
+            <div class="card shadow-sm p-4">
+                <div id="graficoContainer" class="text-center mb-4"></div>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="tablaReporte">
+                        <thead class="table-dark"><tr id="tablaHead"></tr></thead>
+                        <tbody id="tablaBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+let ultimoReporte = null;
+
+document.getElementById('btnGenerar').onclick = async () => {
+    const data = {
+        tipo_reporte: document.getElementById('tipo_reporte').value,
+        fecha_inicio: document.getElementById('fecha_inicio').value,
+        fecha_fin: document.getElementById('fecha_fin').value,
+        proveedor_id: document.getElementById('proveedor_id').value,
+        categoria_id: document.getElementById('categoria_id').value,
+        almacen_id: document.getElementById('almacen_id').value,
+        estado_despacho: document.getElementById('estado_despacho').value,
+        responsable_id: document.getElementById('responsable_id').value,
+        grafico_tipo: document.getElementById('grafico_tipo').value
+    };
+
+    const res = await fetch('/reportes/generar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.data !== undefined) {
+        mostrarResultado(result);
+        ultimoReporte = result;
+        document.getElementById('btnExcel').disabled = false;
+        document.getElementById('btnPDF').disabled = false;
+    } else {
+        alert('Error: ' + result.error);
+    }
+};
+
+function mostrarResultado(data) {
+    const head = document.getElementById('tablaHead');
+    const body = document.getElementById('tablaBody');
+    head.innerHTML = ''; body.innerHTML = '';
+
+    data.columns.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        head.appendChild(th);
+    });
+
+    data.data.forEach(row => {
+        const tr = document.createElement('tr');
+        data.columns.forEach(col => {
+            const td = document.createElement('td');
+            td.textContent = row[col] || '';
+            tr.appendChild(td);
+        });
+        body.appendChild(tr);
+    });
+
+    const grafico = document.getElementById('graficoContainer');
+    grafico.innerHTML = data.chart_url ? `<img src="${data.chart_url}" class="img-fluid" style="max-height: 400px;">` : '';
+
+    document.getElementById('resultado').style.display = 'block';
+}
+
+document.getElementById('btnExcel').onclick = async () => {
+    const res = await fetch('/reportes/exportar/excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ultimoReporte)
+    });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `reporte_${new Date().toISOString().slice(0,19).replace(/:/g,'')}.xlsx`;
+    a.click();
+};
+
+document.getElementById('btnPDF').onclick = async () => {
+    const res = await fetch('/reportes/exportar/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ultimoReporte)
+    });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `reporte_${new Date().toISOString().slice(0,19).replace(/:/g,'')}.pdf`;
+    a.click();
+};
+</script>
+{% endblock %}
