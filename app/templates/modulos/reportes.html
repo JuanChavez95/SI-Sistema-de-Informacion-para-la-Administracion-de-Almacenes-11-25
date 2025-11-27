@@ -3,19 +3,12 @@
 {% block title %}Reportes - Grupo Forno{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<style>
-    .reporte-card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .btn-generar { background: #4a90e2; border: none; }
-    .btn-generar:hover { background: #357abd; }
-    #resultado { animation: fadeIn 0.5s; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style-reportes.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- Sidebar -->
+    <!-- Sidebar (mantenido igual) -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo">
@@ -32,15 +25,17 @@
         </div>
         <nav class="sidebar-nav">
             <a href="{{ url_for('dashboard.index') }}" class="nav-item">
-                <span class="nav-icon">Dashboard</span>
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
             </a>
             <a href="{{ url_for('reportes.index') }}" class="nav-item active">
-                <span class="nav-icon">Reportes</span>
+                <span class="nav-icon">📈</span>
+                <span>Reportes</span>
             </a>
         </nav>
         <div class="sidebar-footer">
             <a href="{{ url_for('auth.logout') }}" class="btn btn-logout">
-                <span>Logout</span> Cerrar Sesión
+                <span>🚪</span>Cerrar Sesión
             </a>
         </div>
     </aside>
@@ -52,95 +47,106 @@
             <p>Genera informes personalizados con gráficos y exportación</p>
         </header>
 
-        <section class="reporte-card card p-4 mb-4">
-            <form id="formFiltros" class="row g-3">
-                <div class="col-md-3">
-                    <label>Tipo de Reporte</label>
-                    <select class="form-select" id="tipo_reporte" required>
+        <!-- Tarjeta de Filtros -->
+        <section class="reporte-card">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="tipo_reporte">Tipo de Reporte</label>
+                    <select id="tipo_reporte" required>
                         <option value="">Seleccionar...</option>
                         <option value="ingreso">Ingresos</option>
                         <option value="inventario">Inventario</option>
                         <option value="despacho">Despachos</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label>Fecha Inicio</label>
-                    <input type="date" class="form-control" id="fecha_inicio">
+
+                <div class="form-group">
+                    <label for="fecha_inicio">Fecha Inicio</label>
+                    <input type="date" id="fecha_inicio">
                 </div>
-                <div class="col-md-3">
-                    <label>Fecha Fin</label>
-                    <input type="date" class="form-control" id="fecha_fin">
+
+                <div class="form-group">
+                    <label for="fecha_fin">Fecha Fin</label>
+                    <input type="date" id="fecha_fin">
                 </div>
-                <div class="col-md-3">
-                    <label>Proveedor</label>
-                    <select class="form-select" id="proveedor_id">
+
+                <div class="form-group">
+                    <label for="proveedor_id">Proveedor</label>
+                    <select id="proveedor_id">
                         <option value="">Todos</option>
                         {% for p in proveedores %}
                         <option value="{{ p.id_proveedor }}">{{ p.nombre_proveedor }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label>Categoría</label>
-                    <select class="form-select" id="categoria_id">
+
+                <div class="form-group">
+                    <label for="categoria_id">Categoría</label>
+                    <select id="categoria_id">
                         <option value="">Todas</option>
                         {% for c in categorias %}
                         <option value="{{ c.id_categoria_producto }}">{{ c.nombre_categoria }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label>Al
 
-amacén</label>
-                    <select class="form-select" id="almacen_id">
+                <div class="form-group">
+                    <label for="almacen_id">Almacén</label>
+                    <select id="almacen_id">
                         <option value="">Todos</option>
                         {% for a in almacenes %}
                         <option value="{{ a.id_almacen }}">{{ a.nombre_almacen }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label>Estado</label>
-                    <select class="form-select" id="estado_despacho">
+
+                <div class="form-group">
+                    <label for="estado_despacho">Estado</label>
+                    <select id="estado_despacho">
                         <option value="">Todos</option>
                         <option>Pendiente</option>
                         <option>Despachado</option>
                         <option>Cancelado</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label>Responsable</label>
-                    <select class="form-select" id="responsable_id">
+
+                <div class="form-group">
+                    <label for="responsable_id">Responsable</label>
+                    <select id="responsable_id">
                         <option value="">Todos</option>
                         {% for r in responsables %}
                         <option value="{{ r.id_persona }}">{{ r.nombre_completo }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label>Gráfico</label>
-                    <select class="form-select" id="grafico_tipo">
+
+                <div class="form-group">
+                    <label for="grafico_tipo">Tipo de Gráfico</label>
+                    <select id="grafico_tipo">
                         <option value="barras">Barras</option>
                         <option value="torta">Torta</option>
                     </select>
                 </div>
-                <div class="col-md-12 text-end">
-                    <button type="button" id="btnGenerar" class="btn btn-generar text-white">
-                        Generar Reporte
-                    </button>
-                    <button type="button" id="btnExcel" class="btn btn-success" disabled>Excel</button>
-                    <button type="button" id="btnPDF" class="btn btn-danger" disabled>PDF</button>
-                </div>
-            </form>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="form-actions">
+                <button type="button" id="btnGenerar">Generar Reporte</button>
+                <button type="button" id="btnExcel" class="btn-success" disabled>Excel</button>
+                <button type="button" id="btnPDF" class="btn-danger" disabled>PDF</button>
+            </div>
         </section>
 
+        <!-- Resultado del Reporte -->
         <div id="resultado" style="display: none;">
-            <div class="card shadow-sm p-4">
-                <div id="graficoContainer" class="text-center mb-4"></div>
+            <div class="card shadow-sm">
+                <div id="graficoContainer"></div>
+                
                 <div class="table-responsive">
-                    <table class="table table-striped" id="tablaReporte">
-                        <thead class="table-dark"><tr id="tablaHead"></tr></thead>
+                    <table id="tablaReporte" class="table">
+                        <thead>
+                            <tr id="tablaHead"></tr>
+                        </thead>
                         <tbody id="tablaBody"></tbody>
                     </table>
                 </div>
@@ -178,37 +184,43 @@ document.getElementById('btnGenerar').onclick = async () => {
         document.getElementById('btnExcel').disabled = false;
         document.getElementById('btnPDF').disabled = false;
     } else {
-        alert('Error: ' + result.error);
+        alert('Error: ' + (result.error || 'No se pudo generar el reporte'));
     }
 };
 
 function mostrarResultado(data) {
+    // Cabeceras
     const head = document.getElementById('tablaHead');
-    const body = document.getElementById('tablaBody');
-    head.innerHTML = ''; body.innerHTML = '';
-
+    head.innerHTML = '';
     data.columns.forEach(col => {
         const th = document.createElement('th');
         th.textContent = col;
         head.appendChild(th);
     });
 
+    // Filas
+    const body = document.getElementById('tablaBody');
+    body.innerHTML = '';
     data.data.forEach(row => {
         const tr = document.createElement('tr');
         data.columns.forEach(col => {
             const td = document.createElement('td');
-            td.textContent = row[col] || '';
+            td.textContent = row[col] ?? '';
             tr.appendChild(td);
         });
         body.appendChild(tr);
     });
 
+    // Gráfico
     const grafico = document.getElementById('graficoContainer');
-    grafico.innerHTML = data.chart_url ? `<img src="${data.chart_url}" class="img-fluid" style="max-height: 400px;">` : '';
+    grafico.innerHTML = data.chart_url 
+        ? `<img src="${data.chart_url}" alt="Gráfico del reporte" style="max-height: 420px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">`
+        : '<p class="text-center text-muted py-5">No hay gráfico disponible para este reporte.</p>';
 
     document.getElementById('resultado').style.display = 'block';
 }
 
+// Exportar Excel
 document.getElementById('btnExcel').onclick = async () => {
     const res = await fetch('/reportes/exportar/excel', {
         method: 'POST',
@@ -218,10 +230,12 @@ document.getElementById('btnExcel').onclick = async () => {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `reporte_${new Date().toISOString().slice(0,19).replace(/:/g,'')}.xlsx`;
+    a.href = url;
+    a.download = `reporte_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.xlsx`;
     a.click();
 };
 
+// Exportar PDF
 document.getElementById('btnPDF').onclick = async () => {
     const res = await fetch('/reportes/exportar/pdf', {
         method: 'POST',
@@ -231,7 +245,8 @@ document.getElementById('btnPDF').onclick = async () => {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `reporte_${new Date().toISOString().slice(0,19).replace(/:/g,'')}.pdf`;
+    a.href = url;
+    a.download = `reporte_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.pdf`;
     a.click();
 };
 </script>
